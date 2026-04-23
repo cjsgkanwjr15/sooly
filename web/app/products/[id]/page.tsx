@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { RatingDisplay } from "@/components/rating-display";
 import { TasteRadar } from "@/components/taste-profile";
+import { BreweryContentSlot } from "@/components/brewery-content-slot";
 import type { Metadata } from "next";
 
 export const revalidate = 600;
@@ -257,6 +258,8 @@ export default async function ProductDetailPage({
               </Link>
             </Section>
           )}
+
+          <BreweryContentSlot variant="product" />
         </div>
 
         {/* 오른쪽 사이드: 맛 프로필 */}

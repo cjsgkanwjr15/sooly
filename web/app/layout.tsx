@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Inter, Gowun_Batang } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { getLocale } from "@/lib/locale";
 
 // 영문 세리프 (디스플레이/헤드라인용)
@@ -48,6 +49,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <SiteHeader />
         <div className="flex-1">{children}</div>
+        <SiteFooter />
       </body>
     </html>
   );

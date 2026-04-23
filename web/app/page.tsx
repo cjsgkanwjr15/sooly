@@ -237,10 +237,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <footer className="border-t py-8 text-center text-xs text-muted-foreground">
-        <p>© 2026 Sooly · 한국술 정보 허브</p>
-        <p className="mt-1">일부 데이터 출처: 더술닷컴(aT)</p>
-      </footer>
     </main>
   );
 }

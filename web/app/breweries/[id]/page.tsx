@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { PhotoPlaceholder } from "@/components/photo-placeholder";
+import { BreweryContentSlot } from "@/components/brewery-content-slot";
 import type { Metadata } from "next";
 
 export const revalidate = 600;
@@ -168,6 +169,10 @@ export default async function BreweryDetailPage({
           </p>
         </section>
       )}
+
+      <section className="mb-10">
+        <BreweryContentSlot variant="brewery" breweryName={brewery.name_ko} />
+      </section>
 
       {products && products.length > 0 && (
         <section className="mb-10">
