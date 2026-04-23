@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
+import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import type { Metadata } from "next";
 
 export const revalidate = 600;
@@ -85,6 +86,13 @@ export default async function BreweryDetailPage({
           </>
         )}
       </nav>
+
+      <PhotoPlaceholder
+        src={null}
+        alt={`${brewery.name_ko} 양조장 전경`}
+        aspectRatio="16/9"
+        className="mb-8"
+      />
 
       <header className="mb-10">
         <div className="mb-3 text-xs uppercase tracking-widest text-primary/80">

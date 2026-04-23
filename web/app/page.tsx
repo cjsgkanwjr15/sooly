@@ -42,6 +42,12 @@ export default async function Home() {
             >
               제품 둘러보기
             </Link>
+            <Link
+              href="/breweries"
+              className={buttonVariants({ size: "lg", variant: "outline" })}
+            >
+              양조장 찾아보기
+            </Link>
           </div>
 
           <dl className="mx-auto mt-14 flex max-w-sm justify-center gap-12 text-sm text-muted-foreground">

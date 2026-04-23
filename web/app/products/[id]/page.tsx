@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
+import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import type { Metadata } from "next";
 
 export const revalidate = 600;
@@ -112,6 +113,14 @@ export default async function ProductDetailPage({
       </nav>
 
       <article>
+        <PhotoPlaceholder
+          src={product.image_url}
+          alt={product.name_ko}
+          aspectRatio="4/3"
+          category={product.category}
+          className="mb-8"
+        />
+
         <header className="mb-10">
           {product.category && (
             <div className="mb-3 text-xs uppercase tracking-widest text-primary/80">

@@ -14,6 +14,9 @@ export function SiteHeader() {
           <Link href="/products" className="transition-colors hover:text-foreground">
             제품
           </Link>
+          <Link href="/breweries" className="transition-colors hover:text-foreground">
+            양조장
+          </Link>
         </nav>
 
         <div className="ml-auto flex items-center gap-3">
