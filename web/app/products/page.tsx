@@ -3,6 +3,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import type { Metadata } from "next";
 import { ProductFilters } from "@/components/product-filters";
+import { Stars } from "@/components/rating-display";
 
 export const metadata: Metadata = {
   title: "제품",
@@ -115,6 +116,9 @@ export default async function ProductsPage({
                 {b?.region && (
                   <span className="ml-1 text-xs opacity-70">· {b.region}</span>
                 )}
+              </div>
+              <div className="mt-3">
+                <Stars value={0} className="text-sm opacity-40" />
               </div>
               <div className="mt-auto pt-3 flex gap-3 text-xs text-muted-foreground">
                 {p.abv != null && <span>{p.abv}%</span>}
