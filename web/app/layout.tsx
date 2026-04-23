@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Inter, Gowun_Batang } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
+import { getLocale } from "@/lib/locale";
 
 // 영문 세리프 (디스플레이/헤드라인용)
 const fraunces = Fraunces({
@@ -33,14 +34,15 @@ export const metadata: Metadata = {
   description: "한국 전통주·막걸리·소주·과실주를 발견하고 기록하는 곳. Korean alcohol, curated.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
     <html
-      lang="ko"
+      lang={locale}
       className={`${inter.variable} ${fraunces.variable} ${gowunBatang.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
