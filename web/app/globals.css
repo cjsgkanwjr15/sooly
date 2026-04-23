@@ -132,3 +132,103 @@
     @apply font-sans;
   }
 }
+
+/* ===========================================================
+ * Blog prose styles — 본문 가독성 + 에디토리얼 톤
+ * (@tailwindcss/typography 대신 직접 정의, 의존성 최소화)
+ * =========================================================== */
+.prose-sooly {
+  color: var(--foreground);
+  font-size: 1.0625rem;
+  line-height: 1.8;
+}
+.prose-sooly > * + * {
+  margin-top: 1.4em;
+}
+.prose-sooly h2 {
+  font-family: var(--font-serif), serif;
+  font-size: 1.625rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  margin-top: 2.2em;
+  margin-bottom: 0.6em;
+}
+.prose-sooly h3 {
+  font-family: var(--font-serif), serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-top: 1.8em;
+  margin-bottom: 0.5em;
+}
+.prose-sooly p {
+  margin-top: 1.2em;
+}
+.prose-sooly a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.prose-sooly a:hover {
+  text-decoration-thickness: 2px;
+}
+.prose-sooly ul,
+.prose-sooly ol {
+  padding-left: 1.5em;
+}
+.prose-sooly ul {
+  list-style: disc;
+}
+.prose-sooly ol {
+  list-style: decimal;
+}
+.prose-sooly li {
+  margin-top: 0.5em;
+}
+.prose-sooly li > p {
+  margin-top: 0.4em;
+}
+.prose-sooly blockquote {
+  border-left: 3px solid var(--primary);
+  padding-left: 1.2em;
+  font-style: italic;
+  color: var(--muted-foreground);
+  margin: 1.8em 0;
+}
+.prose-sooly code {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.9em;
+  padding: 0.15em 0.4em;
+  background: var(--muted);
+  border-radius: 4px;
+}
+.prose-sooly pre {
+  padding: 1.2em;
+  background: var(--muted);
+  border-radius: 10px;
+  overflow-x: auto;
+  font-size: 0.9em;
+  line-height: 1.6;
+}
+.prose-sooly pre code {
+  padding: 0;
+  background: transparent;
+}
+.prose-sooly strong {
+  font-weight: 600;
+  color: var(--foreground);
+}
+.prose-sooly em {
+  font-style: italic;
+}
+.prose-sooly hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2.5em 0;
+}
+.prose-sooly img {
+  border-radius: 10px;
+  margin: 2em auto;
+}

@@ -21,6 +21,9 @@ export async function SiteHeader() {
           <Link href="/breweries" className="transition-colors hover:text-foreground">
             양조장
           </Link>
+          <Link href="/blog" className="transition-colors hover:text-foreground">
+            Journal
+          </Link>
         </nav>
 
         <div className="ml-auto flex items-center gap-3">
