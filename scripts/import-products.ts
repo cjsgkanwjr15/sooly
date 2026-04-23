@@ -90,13 +90,40 @@ function parseList(raw?: string): string[] {
     .filter(Boolean);
 }
 
+// 시도 전체명 → 표준형 매핑. 더술닷컴 원본은 풀네임("경상북도")과 축약형("경북") 혼재.
+// 축약형은 풀네임으로 정규화해 region 필터 일관성 확보.
+const REGION_ALIASES: Array<[RegExp, string]> = [
+  [/^서울(특별시)?/, "서울특별시"],
+  [/^부산(광역시)?/, "부산광역시"],
+  [/^대구(광역시)?/, "대구광역시"],
+  [/^인천(광역시)?/, "인천광역시"],
+  [/^광주(광역시)?/, "광주광역시"],
+  [/^대전(광역시)?/, "대전광역시"],
+  [/^울산(광역시)?/, "울산광역시"],
+  [/^세종(특별자치시)?/, "세종특별자치시"],
+  [/^경기(도)?/, "경기도"],
+  [/^(강원특별자치도|강원도|강원)/, "강원특별자치도"],
+  [/^(충청북도|충북)/, "충청북도"],
+  [/^(충청남도|충남)/, "충청남도"],
+  [/^(전북특별자치도|전라북도|전북)/, "전북특별자치도"],
+  [/^(전라남도|전남)/, "전라남도"],
+  [/^(경상북도|경북)/, "경상북도"],
+  [/^(경상남도|경남)/, "경상남도"],
+  [/^(제주특별자치도|제주도|제주)/, "제주특별자치도"],
+];
+
 function extractRegion(address?: string): string | null {
   if (!address) return null;
-  // "서울특별시 …", "경기도 …", "전라남도 …" 등의 시도 단위 추출
-  const match = address.match(
-    /^(서울특별시|부산광역시|대구광역시|인천광역시|광주광역시|대전광역시|울산광역시|세종특별자치시|경기도|강원도|강원특별자치도|충청북도|충청남도|전라북도|전북특별자치도|전라남도|경상북도|경상남도|제주특별자치도)/,
-  );
-  return match ? match[1] : null;
+  // 정규화: "대한민국 ", "(우편번호)" 접두사 제거 + 오타 1건 정정
+  const t = address
+    .trim()
+    .replace(/^\(\d+\)\s*/, "") // "(25326)강원도…"
+    .replace(/^대한민국\s+/, "") // "대한민국 충청북도…"
+    .replace(/^결기도/, "경기도"); // 수블가 오타
+  for (const [pattern, normalized] of REGION_ALIASES) {
+    if (pattern.test(t)) return normalized;
+  }
+  return null;
 }
 
 function normalizeCategory(raw?: string): string | null {
@@ -111,6 +138,45 @@ function normalizeCategory(raw?: string): string | null {
   if (/리큐|리큐르|기타주류/.test(t)) return "리큐르";
   return t; // 몰라도 일단 원문 보존
 }
+
+// ---------- manual overrides (Kim 검수 결과) ----------
+// 원본 크롤링에서 주소가 비었거나 잘못된 양조장을 수동 보정.
+// aliasOf 는 중복 양조장명을 canonical 이름으로 merge.
+interface BreweryOverride {
+  aliasOf?: string;
+  region?: string;
+  address?: string;
+}
+
+const BREWERY_OVERRIDES: Record<string, BreweryOverride> = {
+  // 중복 — xlsx 에 같은 양조장이 두 이름으로 나뉨
+  "오대서주양조": { aliasOf: "오대서주 양조장" },
+
+  // 주소 비어있어 region 추출 실패 → Kim 수동 보정
+  "한영석의 발효연구소": {
+    region: "전북특별자치도",
+    address: "전북특별자치도 정읍시 답곡길 66",
+  },
+  "마마스팜": {
+    region: "강원특별자치도",
+    address: "강원특별자치도 홍천군 서면 보리울길13번길 6",
+  },
+  "탁브루": {
+    region: "인천광역시",
+    address: "인천광역시 부평구 경인로1104번길 6(부개동) 4층",
+  },
+
+  "코아베스트브루잉": {
+    region: "경기도",
+    address: "경기도 김포시 양촌읍 김포대로 1759번길 33-23",
+  },
+
+  // 주소는 있으나 시도 접두사 누락
+  "고창명산품복분자주": {
+    region: "전북특별자치도",
+    // address 는 xlsx 원본 유지 ("고창군 아산면 복분자로 196")
+  },
+};
 
 // ---------- transform ----------
 interface BreweryUpsert {
@@ -136,18 +202,25 @@ interface ProductUpsert {
 function transformRow(row: RawRow): { brewery: BreweryUpsert | null; product: ProductUpsert | null } {
   if (!row.제품명) return { brewery: null, product: null };
 
-  const breweryName = row.양조장명?.trim() || null;
-  const brewery: BreweryUpsert | null = breweryName
-    ? {
-        name_ko: breweryName,
-        region: extractRegion(row.주소),
-        address: row.주소?.trim() || null,
-        website: row.홈페이지?.trim() || null,
-      }
-    : null;
+  const rawName = row.양조장명?.trim() || null;
+  const override = rawName ? BREWERY_OVERRIDES[rawName] : null;
+  // alias 인 경우 canonical 이름으로 치환 — products 의 FK 연결과 brewery 중복 제거에 사용
+  const canonicalName = override?.aliasOf ?? rawName;
+
+  // alias 레코드는 brewery 생성 안 함 (canonical 쪽 레코드에서 이미 생성됨).
+  // canonical / override / 평범한 경우만 brewery 객체 생성.
+  const brewery: BreweryUpsert | null =
+    rawName && !override?.aliasOf
+      ? {
+          name_ko: canonicalName!,
+          region: override?.region ?? extractRegion(row.주소),
+          address: override?.address ?? (row.주소?.trim() || null),
+          website: row.홈페이지?.trim() || null,
+        }
+      : null;
 
   const product: ProductUpsert = {
-    brewery_name: breweryName,
+    brewery_name: canonicalName,
     name_ko: row.제품명.trim(),
     category: normalizeCategory(row.종류),
     abv: parseAbv(row.알콜도수),
@@ -202,7 +275,7 @@ async function upsertProducts(
   products: ProductUpsert[],
   breweryIdByName: Map<string, string>,
 ): Promise<void> {
-  const payload = products.map((p) => ({
+  const rawPayload = products.map((p) => ({
     name_ko: p.name_ko,
     category: p.category,
     abv: p.abv,
@@ -213,6 +286,27 @@ async function upsertProducts(
     brewery_id: p.brewery_name ? breweryIdByName.get(p.brewery_name) ?? null : null,
   }));
 
+  // (brewery_id, name_ko) 기준 dedupe — Postgres upsert 는 한 statement 에서
+  // 같은 키를 두 번 건드릴 수 없음. xlsx 에 중복 행이 있거나 alias merge
+  // 과정에서 동일 키 쌍이 두 번 나타나면 에러가 나므로 미리 제거.
+  const seenKeys = new Set<string>();
+  const payload: typeof rawPayload = [];
+  const dupes: string[] = [];
+  for (const row of rawPayload) {
+    const key = `${row.brewery_id ?? "null"}::${row.name_ko}`;
+    if (seenKeys.has(key)) {
+      dupes.push(key);
+      continue;
+    }
+    seenKeys.add(key);
+    payload.push(row);
+  }
+  if (dupes.length) {
+    console.log(`  (dedupe) ${dupes.length} 건의 중복 제거:`);
+    for (const d of dupes.slice(0, 10)) console.log(`    - ${d}`);
+    if (dupes.length > 10) console.log(`    ... (${dupes.length - 10} more)`);
+  }
+
   console.log(`products: ${payload.length} rows`);
 
   if (DRY_RUN) {
@@ -220,14 +314,16 @@ async function upsertProducts(
     return;
   }
 
-  // 충돌 키가 없으니(제품은 아직 unique 제약 없음) upsert 대신 insert.
-  // 반복 import 필요해지면 스키마에 (brewery_id, name_ko) unique 추가.
+  // 0003 마이그레이션에서 (brewery_id, name_ko) UNIQUE 가 추가됨.
+  // 재실행 안전 (동일 쌍은 업데이트, 신규만 insert).
   const chunkSize = 500;
   for (let i = 0; i < payload.length; i += chunkSize) {
     const chunk = payload.slice(i, i + chunkSize);
-    const { error } = await sb.from("products").insert(chunk);
-    if (error) throw new Error(`products insert failed at chunk ${i}: ${error.message}`);
-    console.log(`  inserted ${Math.min(i + chunkSize, payload.length)} / ${payload.length}`);
+    const { error } = await sb
+      .from("products")
+      .upsert(chunk, { onConflict: "brewery_id,name_ko", ignoreDuplicates: false });
+    if (error) throw new Error(`products upsert failed at chunk ${i}: ${error.message}`);
+    console.log(`  upserted ${Math.min(i + chunkSize, payload.length)} / ${payload.length}`);
   }
 }
 
