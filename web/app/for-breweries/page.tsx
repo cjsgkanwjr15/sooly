@@ -156,10 +156,10 @@ export default function ForBreweriesPage() {
           <div className="mt-8 inline-flex flex-col items-center gap-3 rounded-xl border bg-card px-8 py-6">
             <p className="text-sm text-muted-foreground">문의 채널</p>
             <a
-              href="mailto:hello@sooly.kr"
+              href="mailto:soolyhello@gmail.com"
               className="font-serif text-xl font-medium text-primary underline underline-offset-4"
             >
-              hello@sooly.kr
+              soolyhello@gmail.com
             </a>
             <p className="text-xs text-muted-foreground">
               양조장명 · 대표 연락처 · 하시고 싶은 질문을 함께 보내주세요

@@ -37,7 +37,7 @@ export function SiteFooter() {
             title="About"
             links={[
               { href: "/blog/welcome", label: "Sooly 소개" },
-              { href: "mailto:hello@sooly.kr", label: "문의하기" },
+              { href: "mailto:soolyhello@gmail.com", label: "문의하기" },
             ]}
           />
         </div>
