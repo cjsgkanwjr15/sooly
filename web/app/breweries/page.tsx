@@ -2,13 +2,14 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { supabaseServer } from "@/lib/supabase/server";
 import { BreweriesFilter } from "@/components/breweries-filter";
+import { Pagination } from "@/components/pagination";
 
 export const metadata: Metadata = {
   title: "양조장",
   description: "한국 전통주 양조장 431곳을 지역별로 둘러보세요.",
 };
 
-type SearchParams = { region?: string; q?: string };
+type SearchParams = { region?: string; q?: string; page?: string };
 
 type BreweryListItem = {
   id: string;
@@ -18,12 +19,19 @@ type BreweryListItem = {
   is_visiting_brewery: boolean | null;
 };
 
+const PAGE_SIZE = 60;
+
 export default async function BreweriesPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { region, q } = await searchParams;
+  const sp = await searchParams;
+  const { region, q } = sp;
+  const page = Math.max(1, Number(sp.page ?? 1) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const sb = await supabaseServer();
 
   // 전체 region 목록 (필터 옵션용)
@@ -35,25 +43,41 @@ export default async function BreweriesPage({
 
   let query = sb
     .from("breweries")
-    .select("id, name_ko, region, address, is_visiting_brewery")
-    .order("name_ko", { ascending: true });
+    .select("id, name_ko, region, address, is_visiting_brewery", { count: "exact" })
+    .order("name_ko", { ascending: true })
+    .range(from, to);
 
   if (region) query = query.eq("region", region);
   if (q) query = query.ilike("name_ko", `%${q}%`);
 
-  const { data: breweries, error } = await query.returns<BreweryListItem[]>();
+  const { data: breweries, error, count } = await query.returns<BreweryListItem[]>();
 
-  // 각 양조장의 제품 수 (집계) — 별도 쿼리로 map 생성
-  const { data: productsByBrewery } = await sb
-    .from("products")
-    .select("brewery_id");
+  // 각 양조장의 제품 수 (집계) — 별도 쿼리. 현재 페이지 양조장 ID 에 한정.
+  const idsOnPage = (breweries ?? []).map((b) => b.id);
   const countMap = new Map<string, number>();
-  for (const row of productsByBrewery ?? []) {
-    if (!row.brewery_id) continue;
-    countMap.set(row.brewery_id, (countMap.get(row.brewery_id) ?? 0) + 1);
+  if (idsOnPage.length > 0) {
+    const { data: productsByBrewery } = await sb
+      .from("products")
+      .select("brewery_id")
+      .in("brewery_id", idsOnPage);
+    for (const row of productsByBrewery ?? []) {
+      if (!row.brewery_id) continue;
+      countMap.set(row.brewery_id, (countMap.get(row.brewery_id) ?? 0) + 1);
+    }
   }
 
   const list = breweries ?? [];
+  const total = count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  function hrefForPage(p: number): string {
+    const next = new URLSearchParams();
+    if (q) next.set("q", q);
+    if (region) next.set("region", region);
+    if (p > 1) next.set("page", String(p));
+    const qs = next.toString();
+    return qs ? `/breweries?${qs}` : "/breweries";
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -64,12 +88,15 @@ export default async function BreweriesPage({
         <p className="mt-2 text-sm text-muted-foreground">
           {q || region ? (
             <>
-              결과 <strong className="text-foreground">{list.length}</strong>곳
+              결과 <strong className="text-foreground">{total}</strong>곳
               {q && <> · "{q}"</>}
               {region && <> · {region}</>}
             </>
           ) : (
-            <>총 <strong className="text-foreground">{list.length}</strong>개 양조장</>
+            <>총 <strong className="text-foreground">{total}</strong>개 양조장</>
+          )}
+          {totalPages > 1 && (
+            <span> · {page}/{totalPages} 페이지</span>
           )}
         </p>
       </header>
@@ -113,6 +140,8 @@ export default async function BreweriesPage({
           );
         })}
       </div>
+
+      <Pagination page={page} totalPages={totalPages} hrefForPage={hrefForPage} />
     </main>
   );
 }
