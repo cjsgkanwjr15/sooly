@@ -17,10 +17,19 @@ const clientSchema = z.object({
   NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
 });
 
+// Vercel 자동 주입: VERCEL_URL (현재 배포 호스트, 프로토콜 없음),
+// NEXT_PUBLIC_VERCEL_URL (클라이언트 번들에도 포함). NEXT_PUBLIC_SITE_URL 이
+// 명시 안 되어 있으면 이걸로 폴백 → 배포 후 env 수동 세팅 없이 작동.
+const vercelUrl =
+  process.env.NEXT_PUBLIC_VERCEL_URL ?? process.env.VERCEL_URL;
+const inferredSiteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (vercelUrl ? `https://${vercelUrl}` : undefined);
+
 const _client = clientSchema.safeParse({
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+  NEXT_PUBLIC_SITE_URL: inferredSiteUrl,
 });
 
 if (!_client.success) {
