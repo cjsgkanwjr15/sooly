@@ -17,11 +17,19 @@ const clientSchema = z.object({
   NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
 });
 
-// Vercel 자동 주입: VERCEL_URL (현재 배포 호스트, 프로토콜 없음),
-// NEXT_PUBLIC_VERCEL_URL (클라이언트 번들에도 포함). NEXT_PUBLIC_SITE_URL 이
-// 명시 안 되어 있으면 이걸로 폴백 → 배포 후 env 수동 세팅 없이 작동.
+// Vercel 자동 주입 env 우선순위:
+//   1. NEXT_PUBLIC_SITE_URL       — 명시적 override (커스텀 도메인 붙일 때)
+//   2. VERCEL_PROJECT_PRODUCTION_URL — stable production 도메인 (예: sooly.vercel.app)
+//      * 배포 hash 가 바뀌어도 안 바뀌므로 sitemap/robots 용으로 안전
+//   3. VERCEL_URL                 — 현재 배포의 deployment-specific URL (preview/dev fallback)
+//
+// robots.txt 와 sitemap.xml 이 이 값을 기반으로 생성되므로 production 에서는
+// 꼭 2번이 잡혀야 함 — 아니면 sooly-xxxxx.vercel.app 이 sitemap 에 박힌다.
 const vercelUrl =
-  process.env.NEXT_PUBLIC_VERCEL_URL ?? process.env.VERCEL_URL;
+  process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ??
+  process.env.VERCEL_PROJECT_PRODUCTION_URL ??
+  process.env.NEXT_PUBLIC_VERCEL_URL ??
+  process.env.VERCEL_URL;
 const inferredSiteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
   (vercelUrl ? `https://${vercelUrl}` : undefined);
