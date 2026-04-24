@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Fraunces, Inter, Gowun_Batang } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { getLocale } from "@/lib/locale";
+
+// Google Analytics 4 측정 ID. 프로덕션 빌드에서만 로드 (아래 IS_PROD 게이트).
+const GA_MEASUREMENT_ID = "G-9Y8QY6L8M6";
+const IS_PROD = process.env.NODE_ENV === "production";
 
 // 영문 세리프 (디스플레이/헤드라인용)
 const fraunces = Fraunces({
@@ -33,6 +38,9 @@ export const metadata: Metadata = {
     template: "%s · Sooly",
   },
   description: "한국 전통주·막걸리·소주·과실주를 발견하고 기록하는 곳. Korean alcohol, curated.",
+  verification: {
+    google: "gPIy7t5wc1y1qXzIfYvHYdFlIOSQKTzrBRG_ruL7670",
+  },
 };
 
 export default async function RootLayout({
@@ -50,6 +58,27 @@ export default async function RootLayout({
         <SiteHeader />
         <div className="flex-1">{children}</div>
         <SiteFooter />
+
+        {/* Google Analytics 4 — prod 빌드에서만.
+            dev (npm run dev) 에선 NODE_ENV === "development" 라 로컬 트래픽이
+            프로덕션 통계를 오염시키지 않음.
+            strategy="afterInteractive" 로 페이지 최초 렌더 방해 안 함. */}
+        {IS_PROD && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_MEASUREMENT_ID}');
+              `}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   );
