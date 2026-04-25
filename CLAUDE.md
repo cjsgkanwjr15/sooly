@@ -401,6 +401,33 @@ CREATE INDEX idx_check_ins_product ON check_ins(product_id);
 - 현재 키: publishable/secret (신규 포맷 `sb_publishable_*` / `sb_secret_*`)
 - 퍼블릭 오픈 시 prod 프로젝트 별도 생성 필요 (dev 키가 이미 채팅에 노출됨)
 
+### 2026-04-25: Sooly 공식 런칭 (sooly.vercel.app)
+- 1,251 → 791 (after dedupe) products + 431 breweries DB 적재 완료
+- robots.txt + sitemap.xml (1,235 URL) 자동 생성
+- Vercel Production: Root Directory=`web`, Framework=Next.js, env var 3개 (Supabase URL/anon/service-role + auto-detected SITE_URL)
+- Search Console 소유권 인증 + sitemap 제출 완료
+- GA4 (`G-9Y8QY6L8M6`) production 빌드에서만 로드, 실시간 계측 확인
+- Schema.org JSON-LD: WebSite (검색박스) + Product (제품) + Brewery/LocalBusiness (양조장)
+- Service role key 2회 로테이션 (1차 채팅 노출로 인해), GitHub repo Private
+
+### 2026-04-25: 브랜드 이메일 = `soolyhello@gmail.com`
+- 이유: Google Workspace ($6+/seat/mo) 는 매출 전에 오버킬. Free Gmail 로 Search Console·GA·향후 Instagram 통합. 매출 후 Workspace 마이그레이션 검토.
+- 대신 코드(footer, /for-breweries) 의 contact 이메일도 모두 이 주소로 통일.
+
+### 2026-04-25: 도메인 = `sooly.co.kr` 단독 (가비아)
+- `sooly.com` 점유, `sooly.kr` 점유 → `sooly.co.kr` available 하고 한국 소비자 대상에 충분
+- KIPRIS 주류 32·33류 "Sooly" 등록 없음 ✓
+- IG 핸들 `@sooly_kr` 가능 ✓
+- `.io` / `.app` 은 글로벌 확장 결정 시점에 재검토 (지금 사봤자 1년 안에 결심 안 서면 매몰)
+- **현재 상태**: 결정만, 구매·DNS 연결은 다음 세션
+- 글로벌 확장 시점에 영문 콘텐츠는 `sooly.co.kr/en` 경로 또는 별도 .io/.com 도메인 검토
+
+### 2026-04-25: SITE_URL 우선순위 정의 (web/lib/env.ts)
+1. `NEXT_PUBLIC_SITE_URL` 명시
+2. `VERCEL_PROJECT_PRODUCTION_URL` (stable, 예: sooly.vercel.app)
+3. `VERCEL_URL` (deployment-specific, fallback)
+- 이유: `VERCEL_URL` 만 쓰면 sitemap·robots 에 배포 hash 박혀서 SEO 신호 분산.
+
 ---
 
 ## 13. 참고 외부 리소스
