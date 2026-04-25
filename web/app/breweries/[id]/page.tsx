@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { BreweryContentSlot } from "@/components/brewery-content-slot";
+import { JsonLd } from "@/components/json-ld";
+import { env } from "@/lib/env";
 import type { Metadata } from "next";
 
 export const revalidate = 600;
@@ -71,8 +73,41 @@ export default async function BreweryDetailPage({
     .order("name_ko")
     .returns<BreweryProduct[]>();
 
+  // Schema.org Brewery (LocalBusiness 의 더 구체적 type).
+  // sameAs 에 외부 공식 URL (홈페이지·인스타) 넣어 entity reconciliation 강화.
+  const breweryJsonLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": ["Brewery", "LocalBusiness"],
+    name: brewery.name_ko,
+    ...(brewery.name_en && { alternateName: brewery.name_en }),
+    url: `${env.NEXT_PUBLIC_SITE_URL}/breweries/${brewery.id}`,
+    ...(brewery.story_ko && { description: brewery.story_ko }),
+    ...(brewery.founded_year && {
+      foundingDate: String(brewery.founded_year),
+    }),
+    ...((brewery.address || brewery.region) && {
+      address: {
+        "@type": "PostalAddress",
+        ...(brewery.address && { streetAddress: brewery.address }),
+        ...(brewery.region && { addressRegion: brewery.region }),
+        addressCountry: "KR",
+      },
+    }),
+    ...((brewery.website || brewery.instagram) && {
+      sameAs: [
+        ...(brewery.website
+          ? [brewery.website.startsWith("http") ? brewery.website : `https://${brewery.website}`]
+          : []),
+        ...(brewery.instagram
+          ? [`https://instagram.com/${brewery.instagram.replace(/^@/, "")}`]
+          : []),
+      ],
+    }),
+  };
+
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
+      <JsonLd data={breweryJsonLd} />
       <nav className="mb-8 text-sm text-muted-foreground">
         <Link href="/products" className="hover:text-foreground">제품</Link>
         {brewery.region && (

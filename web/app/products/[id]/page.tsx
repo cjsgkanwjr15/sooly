@@ -6,6 +6,8 @@ import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { RatingDisplay } from "@/components/rating-display";
 import { TasteRadar } from "@/components/taste-profile";
 import { BreweryContentSlot } from "@/components/brewery-content-slot";
+import { JsonLd } from "@/components/json-ld";
+import { env } from "@/lib/env";
 import type { Metadata } from "next";
 
 export const revalidate = 600;
@@ -109,8 +111,45 @@ export default async function ProductDetailPage({
     .eq("product_id", product.id);
   const averageRating: number | null = null; // 추후: AVG(rating) 집계
 
+  // Schema.org Product — Google 검색 결과 rich snippet (카테고리·브랜드·가격) 활성화.
+  // 알코올 음료를 위한 별도 type 이 schema.org 에 없어 Product + additionalProperty 로 표현.
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name_ko,
+    ...(product.name_en && { alternateName: product.name_en }),
+    ...(product.category && { category: product.category }),
+    description:
+      product.tasting_notes_ko ??
+      `${brewery?.name_ko ? brewery.name_ko + " · " : ""}${product.category ?? ""} ${product.abv ? product.abv + "%" : ""}`.trim(),
+    url: `${env.NEXT_PUBLIC_SITE_URL}/products/${product.id}`,
+    ...(product.image_url && { image: product.image_url }),
+    ...(brewery && {
+      brand: { "@type": "Brand", name: brewery.name_ko },
+      manufacturer: {
+        "@type": "Organization",
+        name: brewery.name_ko,
+        url: `${env.NEXT_PUBLIC_SITE_URL}/breweries/${brewery.id}`,
+        ...(brewery.region && {
+          address: { "@type": "PostalAddress", addressRegion: brewery.region, addressCountry: "KR" },
+        }),
+      },
+    }),
+    ...((product.abv != null || product.volume_ml != null) && {
+      additionalProperty: [
+        ...(product.abv != null
+          ? [{ "@type": "PropertyValue", name: "Alcohol by volume", value: `${product.abv}%` }]
+          : []),
+        ...(product.volume_ml != null
+          ? [{ "@type": "PropertyValue", name: "Volume", value: `${product.volume_ml}ml` }]
+          : []),
+      ],
+    }),
+  };
+
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
+      <JsonLd data={productJsonLd} />
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-muted-foreground">
         <Link href="/products" className="hover:text-foreground">제품</Link>

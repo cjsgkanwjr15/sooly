@@ -4,11 +4,39 @@ import { Fraunces, Inter, Gowun_Batang } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { JsonLd } from "@/components/json-ld";
 import { getLocale } from "@/lib/locale";
+import { env } from "@/lib/env";
 
 // Google Analytics 4 측정 ID. 프로덕션 빌드에서만 로드 (아래 IS_PROD 게이트).
 const GA_MEASUREMENT_ID = "G-9Y8QY6L8M6";
 const IS_PROD = process.env.NODE_ENV === "production";
+
+// Site-wide schema.org 데이터.
+// SearchAction 으로 Google 검색 결과 아래에 사이트 내부 검색 박스 노출 가능
+// (충분한 트래픽 + 검색 사용 패턴 쌓이면 자동 활성화됨).
+const siteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Sooly",
+  alternateName: "Sooly · 한국술 정보 허브",
+  url: env.NEXT_PUBLIC_SITE_URL,
+  description: "한국 전통주·막걸리·소주·과실주 정보 허브",
+  inLanguage: "ko-KR",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${env.NEXT_PUBLIC_SITE_URL}/products?q={search_term_string}`,
+    },
+    "query-input": "required name=search_term_string",
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "Sooly",
+    url: env.NEXT_PUBLIC_SITE_URL,
+  },
+};
 
 // 영문 세리프 (디스플레이/헤드라인용)
 const fraunces = Fraunces({
@@ -55,6 +83,7 @@ export default async function RootLayout({
       className={`${inter.variable} ${fraunces.variable} ${gowunBatang.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <JsonLd data={siteJsonLd} />
         <SiteHeader />
         <div className="flex-1">{children}</div>
         <SiteFooter />
