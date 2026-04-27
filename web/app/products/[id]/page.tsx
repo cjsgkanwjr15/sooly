@@ -6,6 +6,8 @@ import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { RatingDisplay } from "@/components/rating-display";
 import { TasteRadar } from "@/components/taste-profile";
 import { BreweryContentSlot } from "@/components/brewery-content-slot";
+import { CheckInBlock } from "@/components/check-in-block";
+import { RecentCheckIns } from "@/components/recent-check-ins";
 import { JsonLd } from "@/components/json-ld";
 import { env } from "@/lib/env";
 import type { Metadata } from "next";
@@ -104,12 +106,42 @@ export default async function ProductDetailPage({
     : { data: [] };
   const similar = similarData ?? [];
 
-  // 체크인 집계 — 현재 0, 인증 붙으면 자동 동작
-  const { count: checkinCount } = await sb
+  // 체크인 집계 — 별점 + 6축 맛 프로필 평균. application 레벨 집계.
+  // Phase 1 규모(제품당 수십 건)에선 충분. Phase 2 에서 트래픽 늘면 RPC 또는 materialized view.
+  const { data: aggData } = await sb
     .from("check_ins")
-    .select("*", { count: "exact", head: true })
+    .select(
+      "rating, taste_sweet, taste_sour, taste_bitter, taste_umami, taste_aroma, taste_finish",
+    )
     .eq("product_id", product.id);
-  const averageRating: number | null = null; // 추후: AVG(rating) 집계
+  const checkinCount = aggData?.length ?? 0;
+  const averageRating: number | null =
+    checkinCount > 0
+      ? aggData!.reduce((s, r) => s + r.rating, 0) / checkinCount
+      : null;
+
+  // 6축 평균 — 각 축은 NULL 인 row 빼고 평균. 한 축이라도 1+ 이면 표시.
+  function avgAxis(key: keyof NonNullable<typeof aggData>[number]): number | null {
+    if (!aggData) return null;
+    const vals = aggData
+      .map((r) => r[key] as number | null)
+      .filter((v): v is number => typeof v === "number" && v >= 1);
+    if (vals.length === 0) return null;
+    return vals.reduce((s, v) => s + v, 0) / vals.length;
+  }
+  const tasteProfile = {
+    단맛: avgAxis("taste_sweet") ?? undefined,
+    산미: avgAxis("taste_sour") ?? undefined,
+    쓴맛: avgAxis("taste_bitter") ?? undefined,
+    감칠맛: avgAxis("taste_umami") ?? undefined,
+    향: avgAxis("taste_aroma") ?? undefined,
+    목넘김: avgAxis("taste_finish") ?? undefined,
+  };
+  const hasTasteData = Object.values(tasteProfile).some((v) => v !== undefined);
+
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
 
   // Schema.org Product — Google 검색 결과 rich snippet (카테고리·브랜드·가격) 활성화.
   // 알코올 음료를 위한 별도 type 이 schema.org 에 없어 Product + additionalProperty 로 표현.
@@ -144,6 +176,17 @@ export default async function ProductDetailPage({
           ? [{ "@type": "PropertyValue", name: "Volume", value: `${product.volume_ml}ml` }]
           : []),
       ],
+    }),
+    // AggregateRating: Google rich snippet 에 별점 노출. checkinCount > 0 일 때만.
+    // (검색 정책상 reviewCount 1+ 면 통상 노출되지만 Google 의 자체 trust 판단 영향 받음)
+    ...(averageRating != null && checkinCount > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: averageRating.toFixed(2),
+        reviewCount: checkinCount,
+        bestRating: 5,
+        worstRating: 1,
+      },
     }),
   };
 
@@ -226,20 +269,8 @@ export default async function ProductDetailPage({
             <Stat label="지역" value={brewery?.region ?? "—"} />
           </dl>
 
-          {/* 체크인 CTA — 인증 붙기 전까지는 안내 */}
-          <div className="mt-8 rounded-xl border border-primary/20 bg-primary/[0.04] p-5">
-            <p className="font-serif text-base font-medium">첫 체크인을 남겨보세요</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              이 술을 마셨다면 별점과 한 줄 메모로 기록해보세요. 다른 사람과 취향을 공유할 수 있어요.
-            </p>
-            <button
-              type="button"
-              disabled
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary/70 px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-70"
-              aria-label="체크인 기능 곧 출시"
-            >
-              🍶 체크인 (곧 출시)
-            </button>
+          <div className="mt-8">
+            <CheckInBlock productId={product.id} />
           </div>
         </div>
       </div>
@@ -298,6 +329,8 @@ export default async function ProductDetailPage({
             </Section>
           )}
 
+          <RecentCheckIns productId={product.id} currentUserId={user?.id} />
+
           <BreweryContentSlot variant="product" />
         </div>
 
@@ -307,7 +340,10 @@ export default async function ProductDetailPage({
             <h3 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
               맛 프로필
             </h3>
-            <TasteRadar profile={null} className="aspect-square" />
+            <TasteRadar
+              profile={hasTasteData ? tasteProfile : null}
+              className="aspect-square"
+            />
           </div>
 
           {sameBrewery.length > 0 && brewery && (

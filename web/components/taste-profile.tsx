@@ -89,9 +89,10 @@ export function TasteRadar({ profile, className = "" }: Props) {
             strokeLinejoin="round"
           />
         )}
-        {/* 축 라벨 */}
+        {/* 축 라벨 — viewBox 200×200 안에서 짤리지 않도록 r=5.5 (=88px). 12시(단맛)
+            와 6시(감칠맛) 이 가장 viewBox 경계에 가까움. */}
         {AXES.map((axis, i) => {
-          const labelPoint = pointAt(i, 6.2);
+          const labelPoint = pointAt(i, 5.5);
           return (
             <text
               key={axis}
