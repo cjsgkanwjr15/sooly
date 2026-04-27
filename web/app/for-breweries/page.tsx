@@ -5,8 +5,29 @@ import { buttonVariants } from "@/components/ui/button";
 export const metadata: Metadata = {
   title: "양조장을 위한 Sooly",
   description:
-    "Sooly 는 한국술 정보 허브입니다. 양조장 Verified 플랜으로 공식 페이지 인증, 데이터 분석, 신제품 노출 기회를 제공합니다.",
+    "Sooly 는 한국술 정보 허브입니다. 양조장 인증 페이지·공식 데이터 등록·향후 분석 도구를 무료로 시작하세요.",
 };
+
+// mailto prefill — 양조장이 빈칸만 채울 수 있게 양식 미리 들어감.
+// URL encode 안 한 한글 OK (브라우저가 자동 처리). %0A = 줄바꿈.
+const MAILTO = (() => {
+  const subject = "[Sooly Verified] 양조장 등록 문의";
+  const body = [
+    "1. 양조장명 (한글):",
+    "2. 양조장명 (영문, 있으면):",
+    "3. 신청자 이름 + 직책 (예: 홍길동 / 대표):",
+    "4. 연락처 (휴대폰 또는 이메일):",
+    "5. 인증 자료 (택1):",
+    "   ㄱ. 사업자등록증 사본 첨부",
+    "   ㄴ. 양조장 공식 도메인 이메일 (예: kim@brewery.co.kr)",
+    "   ㄷ. 양조장 공식 인스타·홈페이지 운영자임을 증명할 자료",
+    "6. 하고 싶은 것 (제품 정보 수정 / 사진 업로드 / 양조장 스토리 추가 등):",
+    "",
+    "",
+    "(추가로 궁금한 점이 있으시면 자유롭게 적어주세요.)",
+  ].join("\n");
+  return `mailto:soolyhello@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+})();
 
 export default function ForBreweriesPage() {
   return (
@@ -24,8 +45,8 @@ export default function ForBreweriesPage() {
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             Sooly 는 한국 전통주 {400}개 이상의 양조장과 {800}종 제품을 담은 정보 허브입니다.
-            Verified 플랜에 참여하시면 양조장 공식 페이지를 직접 관리하고, 소비자 데이터를
-            받아보고, 신제품을 우선 노출할 수 있습니다.
+            지금 인증 신청하시면 양조장 페이지를 직접 관리하고, 사용자가 발견하는 첫 인상을
+            바꿀 수 있어요.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
             <Link
@@ -38,81 +59,138 @@ export default function ForBreweriesPage() {
               href="#features"
               className={buttonVariants({ size: "lg", variant: "outline" })}
             >
-              제공 기능 보기
+              지금 무료로 가능한 것
             </Link>
           </div>
           <p className="mt-6 text-xs text-muted-foreground">
-            💡 현재 얼리어답터 양조장을 찾고 있습니다. 초기 3개월 무료 이용 혜택.
+            💡 현재 얼리어답터 양조장과 함께 가격·기능을 결정합니다. 합류 시 의견이 곧바로
+            반영돼요.
           </p>
         </div>
       </section>
 
-      {/* 현재 가능한 것 */}
-      <section className="border-b px-6 py-20">
+      {/* 지금 무료로 가능한 것 */}
+      <section id="features" className="border-b px-6 py-20">
         <div className="mx-auto max-w-4xl">
           <h2 className="font-serif text-3xl font-semibold tracking-tight">
-            지금 당장 — 무료로 가능한 것
+            지금, 무료로 — 양조장이 직접 할 수 있는 것
           </h2>
-          <p className="mt-4 text-muted-foreground">
-            Sooly 에 이미 등록된 양조장이라면, 문의 주시면 아래를 바로 반영해드립니다.
+          <p className="mt-4 leading-relaxed text-muted-foreground">
+            아래 네 가지는 메일 한 통으로 시작합니다. 결제 없음, 약정 없음.
+            인증 후 24시간 내 반영됩니다.
           </p>
           <ul className="mt-8 grid gap-5 sm:grid-cols-2">
             <Benefit
+              num="01"
               title="공식 페이지 인증"
-              desc="양조장 페이지에 'Verified' 뱃지. 진짜 사장님이 관리하는 공간임을 명시."
+              desc="양조장 페이지에 'Verified ✓' 뱃지. 진짜 운영자가 관리하는 공간임을 사용자에게 명시."
             />
             <Benefit
+              num="02"
               title="양조장 이야기·소개글 등재"
-              desc="양조장의 역사·철학·대표의 이야기. 유저가 제품을 선택할 때 결정타."
+              desc="역사·철학·대표 인터뷰. 사용자가 제품 선택 시 결정타가 되는 컨텍스트."
             />
             <Benefit
+              num="03"
               title="공식 사진 업로드"
-              desc="양조장 전경, 설비, 대표 사진. 플레이스홀더 이미지 대체."
+              desc="양조장 전경·설비·대표 사진. 현재 플레이스홀더 자리를 진짜 사진으로."
             />
             <Benefit
+              num="04"
               title="제품 정보 수정"
-              desc="도수·용량·원재료 등 크롤링 시점 이후 변경된 정보 업데이트."
+              desc="크롤링 시점 이후 변경된 도수·용량·원재료·페어링 업데이트."
             />
           </ul>
+
+          {/* 신청 절차 */}
+          <div className="mt-12 rounded-xl border border-primary/15 bg-primary/[0.03] p-6">
+            <h3 className="font-serif text-lg font-medium">신청 절차 — 3 step</h3>
+            <ol className="mt-4 space-y-3 text-sm leading-relaxed">
+              <li className="flex gap-3">
+                <span className="font-serif text-primary">1.</span>
+                <span>
+                  <strong className="text-foreground">메일 작성</strong> —
+                  아래{" "}
+                  <Link href="#contact" className="underline underline-offset-2">
+                    등록 문의
+                  </Link>{" "}
+                  버튼을 누르면 메일 양식이 자동으로 채워져요. 빈칸만 채워서 보내세요.
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-serif text-primary">2.</span>
+                <span>
+                  <strong className="text-foreground">검증</strong> — Sooly 가
+                  보내주신 자료로 양조장 운영자 본인임을 확인합니다 (보통 1영업일).
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-serif text-primary">3.</span>
+                <span>
+                  <strong className="text-foreground">반영</strong> — 인증 완료
+                  후 양조장 페이지에 Verified 뱃지 + 보내주신 정보·사진이 24시간 내 게재됩니다.
+                </span>
+              </li>
+            </ol>
+          </div>
         </div>
       </section>
 
-      {/* 곧 출시 — Verified 플랜 */}
-      <section id="features" className="border-b px-6 py-20">
+      {/* Verified 플랜 — 솔직 모드 */}
+      <section className="border-b px-6 py-20">
         <div className="mx-auto max-w-4xl">
           <p className="text-xs uppercase tracking-widest text-primary/70">
-            Verified Plan · 2026 Q3 론칭 예정
+            Verified Plan · 가격 결정 단계
           </p>
           <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">
-            Verified 플랜에서 추가되는 것
+            유료 플랜 — 첫 양조장과 함께 결정합니다
           </h2>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2">
-            <Feature
-              badge="Dashboard"
-              title="대시보드 · 조회수 & 체크인 분석"
-              desc="양조장·제품별 조회수, 유저 체크인 평균 별점, 월별 트렌드. 어떤 제품이 어느 지역에서 인기인지 실시간으로."
-            />
-            <Feature
-              badge="Publishing"
-              title="양조장 공지 & 뉴스피드"
-              desc="신제품 출시, 이벤트, 양조장 방문 안내를 직접 공지. 팔로워에게 자동 알림."
-            />
-            <Feature
-              badge="Promotion"
-              title="신제품 우선 노출"
-              desc="홈 & 카테고리 페이지 '이번 주 신제품' 섹션 배치. 유저 첫인상을 선점."
-            />
-            <Feature
-              badge="Verified"
-              title="공식 Verified 뱃지"
-              desc="검색 결과 & 양조장 페이지에 인증 마크. 신뢰도 지표로 작동."
-            />
-          </div>
-          <div className="mt-10 rounded-xl border border-primary/20 bg-primary/[0.04] p-6">
-            <p className="font-serif text-lg font-medium">예상 가격: 월 9만원 ~ 29만원</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              양조장 규모 & 원하는 기능에 따라 3개 플랜. 얼리어답터는 <strong className="text-foreground">초기 3개월 무료</strong>.
-            </p>
+          <p className="mt-5 leading-relaxed text-muted-foreground">
+            Sooly 는 양조장에게 정말 필요한 도구만 만들고 가격도 정직하게 매기고 싶어요.
+            그래서 첫 5~10 양조장 cohort 와 직접 대화해서 무엇을 만들지·얼마면 합리적인지
+            함께 정합니다. 지금 합류하시면:
+          </p>
+          <ul className="mt-6 space-y-3 text-[1rem] leading-relaxed">
+            <li className="flex gap-3">
+              <span className="text-primary">→</span>
+              <span>가격·기능 의사결정에 직접 참여</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-primary">→</span>
+              <span>유료 출시 시 첫 6개월 무료 (얼리어답터 혜택)</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-primary">→</span>
+              <span>출시 후에도 평생 얼리어답터 가격 락인</span>
+            </li>
+          </ul>
+
+          <div className="mt-10">
+            <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+              개발 중인 것 (cohort 의견 기반으로 우선순위 정함)
+            </h3>
+            <div className="mt-4 grid gap-6 sm:grid-cols-2">
+              <Feature
+                badge="Dashboard"
+                title="조회수 & 체크인 분석"
+                desc="양조장·제품별 조회수, 평균 별점, 어떤 제품이 어느 지역·연령대에서 인기인지."
+              />
+              <Feature
+                badge="Publishing"
+                title="양조장 공지 & 뉴스피드"
+                desc="신제품 출시·이벤트·방문 안내를 직접 공지. 양조장 팔로워에게 자동 알림."
+              />
+              <Feature
+                badge="Promotion"
+                title="신제품 우선 노출"
+                desc="홈 & 카테고리 '이번 주 신제품' 섹션 배치."
+              />
+              <Feature
+                badge="Insights"
+                title="검색 키워드 리포트"
+                desc="사용자가 양조장·제품을 어떤 검색어로 발견하는지. SEO 인사이트."
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -143,43 +221,100 @@ export default function ForBreweriesPage() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section className="border-b px-6 py-20">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="font-serif text-3xl font-semibold tracking-tight">자주 묻는 질문</h2>
+          <div className="mt-10 space-y-5">
+            <Faq q="지금 무료로 가능한 것 — 정말 무료인가요?">
+              네. 결제 없음, 카드 등록 없음, 약정 없음. 양조장 페이지 인증·소개글 등재·사진 업로드·제품 수정은 양조장 운영자라면 누구나 무료로 사용할 수 있어요.
+            </Faq>
+            <Faq q="Verified 플랜 가격은 얼마인가요?">
+              아직 정해지지 않았어요. 첫 5~10 양조장 cohort 와 직접 만나서 정직한 가격을 함께 정할 계획입니다. 지금 합류하시면 그 의사결정에 참여하고, 유료 출시 시 첫 6개월 무료 + 얼리어답터 가격 락인을 받으실 수 있어요.
+            </Faq>
+            <Faq q="인증은 어떻게 검증하나요?">
+              사업자등록증 사본 / 양조장 공식 도메인 이메일 / 양조장 공식 인스타·홈페이지 운영 증명 중 하나면 됩니다. Sooly 가 직접 확인 후 1영업일 내 답신드려요.
+            </Faq>
+            <Faq q="제품 정보 수정·사진 업로드는 양조장이 직접 하나요?">
+              지금은 메일로 보내주시면 Sooly 가 반영합니다 (24시간 내). Verified 플랜에는 양조장 운영자가 직접 수정할 수 있는 인터페이스가 포함될 예정이에요.
+            </Faq>
+            <Faq q="저희 양조장이 Sooly 에 이미 등록돼 있나요?">
+              전국 1,300곳 양조장 중 약 400곳, 제품 791종이 이미 카탈로그에 있습니다. 메일로 양조장명 알려주시면 등록 여부 + 페이지 URL 을 답신드려요. (없으면 신규 등록도 무료입니다.)
+            </Faq>
+            <Faq q="중간에 그만두고 싶으면 어떻게 하나요?">
+              언제든. 지금은 메일 한 통이면 인증 해제·정보 비공개 모두 가능합니다. 데이터는 즉시 삭제 또는 비공개 처리됩니다.
+            </Faq>
+          </div>
+        </div>
+      </section>
+
       {/* 문의 */}
-      <section id="contact" className="border-b bg-[color-mix(in_oklab,var(--color-primary)_4%,var(--color-background))] px-6 py-20">
+      <section
+        id="contact"
+        className="border-b bg-[color-mix(in_oklab,var(--color-primary)_4%,var(--color-background))] px-6 py-20"
+      >
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
             함께 만들 양조장을 찾습니다
           </h2>
           <p className="mt-5 leading-relaxed text-muted-foreground">
-            초기 합류 양조장에는 Verified 플랜 <strong className="text-foreground">초기 3개월 무료</strong> 및
-            제품 기획 단계에서 의견이 반영되는 기회를 드립니다.
+            등록 문의 버튼을 누르면 메일 양식이 자동으로 채워져요.
+            빈칸만 채워서 보내주시면 1영업일 내 답신드립니다.
           </p>
-          <div className="mt-8 inline-flex flex-col items-center gap-3 rounded-xl border bg-card px-8 py-6">
-            <p className="text-sm text-muted-foreground">문의 채널</p>
+
+          <div className="mt-9 flex justify-center">
+            <a
+              href={MAILTO}
+              className={buttonVariants({ size: "lg" })}
+            >
+              ✉️ 등록 문의하기 (메일 양식 자동 채움)
+            </a>
+          </div>
+
+          <p className="mt-5 text-xs text-muted-foreground">
+            메일 클라이언트가 안 열리면 직접 보내주세요 →{" "}
             <a
               href="mailto:soolyhello@gmail.com"
-              className="font-serif text-xl font-medium text-primary underline underline-offset-4"
+              className="font-medium text-foreground underline underline-offset-2"
             >
               soolyhello@gmail.com
             </a>
-            <p className="text-xs text-muted-foreground">
-              양조장명 · 대표 연락처 · 하시고 싶은 질문을 함께 보내주세요
-            </p>
-          </div>
-          <p className="mt-8 text-xs text-muted-foreground">
-            곧 온라인 신청 폼이 이 자리에 추가됩니다.
           </p>
+
+          <div className="mt-12 rounded-xl border bg-card p-6 text-left">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              메일에 함께 보내주실 정보
+            </p>
+            <ul className="mt-3 space-y-2 text-sm">
+              <li>1. 양조장명 (한글) + 영문 표기</li>
+              <li>2. 신청자 이름 + 직책 (예: 홍길동 / 대표)</li>
+              <li>3. 연락처 — 휴대폰 또는 이메일</li>
+              <li>
+                4. 인증 자료 — 사업자등록증 사본 / 공식 도메인 이메일 / 공식 인스타·홈페이지
+                운영 증명 중 하나
+              </li>
+              <li>5. 하고 싶은 것 (제품 수정 / 사진 / 양조장 스토리 등)</li>
+            </ul>
+          </div>
         </div>
       </section>
-
     </main>
   );
 }
 
-function Benefit({ title, desc }: { title: string; desc: string }) {
+function Benefit({
+  num,
+  title,
+  desc,
+}: {
+  num: string;
+  title: string;
+  desc: string;
+}) {
   return (
     <div className="rounded-lg border bg-card p-5">
-      <div className="flex items-center gap-2">
-        <span className="text-primary" aria-hidden>✓</span>
+      <div className="flex items-baseline gap-3">
+        <span className="font-serif text-sm text-primary/70">{num}</span>
         <h3 className="font-serif text-base font-medium">{title}</h3>
       </div>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
@@ -187,7 +322,15 @@ function Benefit({ title, desc }: { title: string; desc: string }) {
   );
 }
 
-function Feature({ badge, title, desc }: { badge: string; title: string; desc: string }) {
+function Feature({
+  badge,
+  title,
+  desc,
+}: {
+  badge: string;
+  title: string;
+  desc: string;
+}) {
   return (
     <div className="rounded-xl border bg-card p-6">
       <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] uppercase tracking-wider text-primary">
@@ -199,7 +342,15 @@ function Feature({ badge, title, desc }: { badge: string; title: string; desc: s
   );
 }
 
-function Point({ num, title, body }: { num: string; title: string; body: string }) {
+function Point({
+  num,
+  title,
+  body,
+}: {
+  num: string;
+  title: string;
+  body: string;
+}) {
   return (
     <div className="flex gap-5">
       <span className="font-serif text-lg text-primary/70">{num}</span>
@@ -208,5 +359,24 @@ function Point({ num, title, body }: { num: string; title: string; body: string 
         <p className="mt-2 leading-relaxed text-muted-foreground">{body}</p>
       </div>
     </div>
+  );
+}
+
+function Faq({ q, children }: { q: string; children: React.ReactNode }) {
+  return (
+    <details className="group rounded-lg border bg-card p-5 transition-colors open:border-primary/30">
+      <summary className="cursor-pointer list-none">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="font-serif text-base font-medium">{q}</h3>
+          <span
+            aria-hidden
+            className="mt-0.5 shrink-0 text-muted-foreground transition-transform group-open:rotate-45"
+          >
+            +
+          </span>
+        </div>
+      </summary>
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{children}</p>
+    </details>
   );
 }
