@@ -428,6 +428,27 @@ CREATE INDEX idx_check_ins_product ON check_ins(product_id);
 3. `VERCEL_URL` (deployment-specific, fallback)
 - 이유: `VERCEL_URL` 만 쓰면 sitemap·robots 에 배포 hash 박혀서 SEO 신호 분산.
 
+### 2026-04-28: Phase 1 사실상 완성 (Auth + 체크인 + 도메인 + AI 번역 + Locale)
+- **유저 Auth 풀세트** (매직 링크) — Next 16 의 `proxy.ts` (구 middleware) + /login + /auth/callback + 헤더 user-menu + /u/[username] 프로필
+- **체크인 풀세트** — 별점·페어링·메모·날짜·6축 맛 프로필·여러 체크인 허용·인라인 수정/삭제 (마이그레이션 0004~0008)
+- **도메인 sooly.co.kr** — 가비아 + Vercel + 308 redirect + Search Console + NEXT_PUBLIC_SITE_URL → sitemap·robots 통일
+- **AI 한/영 번역** — Gemini 2.5-flash + fallback chain. 786/791 = 99% 성공 (~91분 background)
+- **Locale toggle 코드** — `pick(locale, ko, en)` + product/brewery detail 페이지 영문 칼럼 사용 (ko fallback safe)
+- **콘텐츠 다듬기** — welcome.md 입니다 체 + 회사 소개 톤 / /for-breweries 솔직 가격 모드 + FAQ + mailto prefill
+
+### 2026-04-28: 양조장 Verified 가격 = 솔직 모드
+- 9~29만원 미리 락인 X. 첫 5~10 양조장 cohort 와 가격·기능 협의 후 결정
+- 얼리어답터 6개월 무료 + 평생 가격 락인
+- 본인 CLAUDE.md §10 "Phase 2/3 기능을 Phase 1 에 섞지 말 것" 준수: 풀 인증 시스템은 Phase 3, 지금은 mailto + Kim 수동 인증
+
+### 2026-04-28: 1제품 1체크인 → 여러 체크인 허용 (Untappd 스타일)
+- 0005 unique 추가 후 0006 에서 제거. 같은 술 다른 술자리 = 다른 별점·다른 메모, 시간순 누적
+- 본인 체크인은 RecentCheckIns 에서 인라인 수정·삭제 (MyCheckInRow 클라이언트 컴포넌트)
+
+### 2026-04-28: API 키 채팅 노출 패턴 = 메모리 룰 추가
+- 4-25 service_role 2회 + 4-28 Gemini 1회 노출. 매번 burned 후 로테이션
+- `feedback_secret_in_chat.md` 메모리 추가 — 다음 세션부터 키 받기 *직전* 사전 차단
+
 ---
 
 ## 13. 참고 외부 리소스
