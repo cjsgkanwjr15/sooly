@@ -6,7 +6,10 @@
   "type": "module",
   "scripts": {
     "import:products": "tsx import-products.ts",
-    "import:products:dry": "tsx import-products.ts --dry-run"
+    "import:products:dry": "tsx import-products.ts --dry-run",
+    "translate:sample": "tsx ai-translate.ts --sample 5 --dry-run",
+    "translate:dry": "tsx ai-translate.ts --dry-run",
+    "translate": "tsx ai-translate.ts"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -14,6 +17,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@google/genai": "^1.0.0",
     "@supabase/supabase-js": "^2.45.4",
     "dotenv": "^16.4.5",
     "xlsx": "^0.18.5"
