@@ -5,6 +5,7 @@ import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { BreweryContentSlot } from "@/components/brewery-content-slot";
 import { JsonLd } from "@/components/json-ld";
 import { env } from "@/lib/env";
+import { getLocale, pick } from "@/lib/locale";
 import type { Metadata } from "next";
 
 export const revalidate = 600;
@@ -26,6 +27,7 @@ type Brewery = {
 type BreweryProduct = {
   id: string;
   name_ko: string;
+  name_en: string | null;
   category: string | null;
   abv: number | null;
   volume_ml: number | null;
@@ -68,10 +70,15 @@ export default async function BreweryDetailPage({
   const sb = await supabaseServer();
   const { data: products } = await sb
     .from("products")
-    .select("id, name_ko, category, abv, volume_ml")
+    .select("id, name_ko, name_en, category, abv, volume_ml")
     .eq("brewery_id", id)
     .order("name_ko")
     .returns<BreweryProduct[]>();
+
+  const locale = await getLocale();
+  const breweryName = pick(locale, brewery.name_ko, brewery.name_en) ?? brewery.name_ko;
+  const breweryNameAlt = locale === "en" ? brewery.name_ko : brewery.name_en;
+  const breweryStory = pick(locale, brewery.story_ko, brewery.story_en);
 
   // Schema.org Brewery (LocalBusiness 의 더 구체적 type).
   // sameAs 에 외부 공식 URL (홈페이지·인스타) 넣어 entity reconciliation 강화.
@@ -125,27 +132,33 @@ export default async function BreweryDetailPage({
 
       <PhotoPlaceholder
         src={null}
-        alt={`${brewery.name_ko} 양조장 전경`}
+        alt={`${breweryName} 양조장 전경`}
         aspectRatio="16/9"
         className="mb-8"
       />
 
       <header className="mb-10">
         <div className="mb-3 text-xs uppercase tracking-widest text-primary/80">
-          양조장
+          {locale === "en" ? "Brewery" : "양조장"}
         </div>
         <h1 className="font-serif text-4xl font-semibold tracking-tight sm:text-5xl">
-          {brewery.name_ko}
+          {breweryName}
         </h1>
-        {brewery.name_en && (
-          <p className="mt-2 text-lg text-muted-foreground">{brewery.name_en}</p>
+        {breweryNameAlt && (
+          <p className="mt-2 text-lg text-muted-foreground">{breweryNameAlt}</p>
         )}
         <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
           {brewery.region && <span>{brewery.region}</span>}
-          {brewery.founded_year && <span>설립 {brewery.founded_year}년</span>}
+          {brewery.founded_year && (
+            <span>
+              {locale === "en"
+                ? `Founded ${brewery.founded_year}`
+                : `설립 ${brewery.founded_year}년`}
+            </span>
+          )}
           {brewery.is_visiting_brewery && (
             <span className="rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-xs text-primary">
-              찾아가는 양조장
+              {locale === "en" ? "Visiting brewery" : "찾아가는 양조장"}
             </span>
           )}
         </div>
@@ -194,43 +207,47 @@ export default async function BreweryDetailPage({
         </section>
       )}
 
-      {brewery.story_ko && (
+      {breweryStory && (
         <section className="mb-10">
           <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            이야기
+            {locale === "en" ? "Story" : "이야기"}
           </h2>
           <p className="whitespace-pre-line leading-relaxed text-muted-foreground">
-            {brewery.story_ko}
+            {breweryStory}
           </p>
         </section>
       )}
 
       <section className="mb-10">
-        <BreweryContentSlot variant="brewery" breweryName={brewery.name_ko} />
+        <BreweryContentSlot variant="brewery" breweryName={breweryName} />
       </section>
 
       {products && products.length > 0 && (
         <section className="mb-10">
           <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            제품 <span className="text-foreground">{products.length}</span>
+            {locale === "en" ? "Products" : "제품"}{" "}
+            <span className="text-foreground">{products.length}</span>
           </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {products.map((p) => (
-              <Link
-                key={p.id}
-                href={`/products/${p.id}`}
-                className="group rounded-md border bg-card p-4 transition-colors hover:border-primary/30"
-              >
-                <div className="font-serif text-base font-medium leading-snug group-hover:underline">
-                  {p.name_ko}
-                </div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  {p.category}
-                  {p.abv != null && ` · ${p.abv}%`}
-                  {p.volume_ml != null && ` · ${p.volume_ml}ml`}
-                </div>
-              </Link>
-            ))}
+            {products.map((p) => {
+              const pName = pick(locale, p.name_ko, p.name_en) ?? p.name_ko;
+              return (
+                <Link
+                  key={p.id}
+                  href={`/products/${p.id}`}
+                  className="group rounded-md border bg-card p-4 transition-colors hover:border-primary/30"
+                >
+                  <div className="font-serif text-base font-medium leading-snug group-hover:underline">
+                    {pName}
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {p.category}
+                    {p.abv != null && ` · ${p.abv}%`}
+                    {p.volume_ml != null && ` · ${p.volume_ml}ml`}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}

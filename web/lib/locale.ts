@@ -28,3 +28,23 @@ export async function getLocale(): Promise<Locale> {
 }
 
 export { COOKIE_NAME as LOCALE_COOKIE };
+
+/**
+ * locale 에 맞는 텍스트 선택. locale='en' 이고 en 값이 있으면 en, 그 외엔 ko fallback.
+ * Translate 가 아직 채우지 않은 row 도 안전하게 ko 로 떨어짐.
+ *
+ * 사용 예:
+ *   pick(locale, product.name_ko, product.name_en)
+ *   pick(locale, brewery.story_ko, brewery.story_en)
+ */
+export function pick(
+  locale: Locale,
+  ko: string | null | undefined,
+  en: string | null | undefined,
+): string | null {
+  if (locale === "en" && en && en.trim()) return en;
+  if (ko && ko.trim()) return ko;
+  // ko 도 비어있으면 en 마지막 fallback (드물지만 ko 만 비어있는 경우)
+  if (en && en.trim()) return en;
+  return null;
+}

@@ -10,6 +10,7 @@ import { CheckInBlock } from "@/components/check-in-block";
 import { RecentCheckIns } from "@/components/recent-check-ins";
 import { JsonLd } from "@/components/json-ld";
 import { env } from "@/lib/env";
+import { getLocale, pick } from "@/lib/locale";
 import type { Metadata } from "next";
 
 export const revalidate = 600;
@@ -36,6 +37,7 @@ type ProductDetail = {
     address: string | null;
     website: string | null;
     story_ko: string | null;
+    story_en: string | null;
   } | null;
 };
 
@@ -47,7 +49,7 @@ async function getProduct(id: string) {
       `id, name_ko, name_en, category, abv, volume_ml, ingredients,
        tasting_notes_ko, tasting_notes_en, pairing_suggestions,
        image_url, source_url, brewery_id,
-       breweries(id, name_ko, name_en, region, address, website, story_ko)`,
+       breweries(id, name_ko, name_en, region, address, website, story_ko, story_en)`,
     )
     .eq("id", id)
     .single<ProductDetail>();
@@ -87,7 +89,7 @@ export default async function ProductDetailPage({
   const { data: sameBreweryData } = brewery?.id
     ? await sb
         .from("products")
-        .select("id, name_ko, category, abv")
+        .select("id, name_ko, name_en, category, abv")
         .eq("brewery_id", brewery.id)
         .neq("id", product.id)
         .limit(4)
@@ -98,7 +100,9 @@ export default async function ProductDetailPage({
   const { data: similarData } = product.category
     ? await sb
         .from("products")
-        .select("id, name_ko, category, abv, volume_ml, breweries(name_ko, region)")
+        .select(
+          "id, name_ko, name_en, category, abv, volume_ml, breweries(name_ko, name_en, region)",
+        )
         .eq("category", product.category)
         .neq("id", product.id)
         .neq("brewery_id", brewery?.id ?? "")
@@ -142,6 +146,19 @@ export default async function ProductDetailPage({
   const {
     data: { user },
   } = await sb.auth.getUser();
+
+  // locale 결정 + bilingual primary/secondary 텍스트 선택.
+  // primary = locale 우선 (ko 또는 en), secondary = 반대 언어 (있으면 작은 글자로 표시).
+  const locale = await getLocale();
+  const productName = pick(locale, product.name_ko, product.name_en) ?? product.name_ko;
+  const productNameAlt = locale === "en" ? product.name_ko : product.name_en;
+  const breweryName = brewery
+    ? (pick(locale, brewery.name_ko, brewery.name_en) ?? brewery.name_ko)
+    : null;
+  const tastingNotes = pick(locale, product.tasting_notes_ko, product.tasting_notes_en);
+  const breweryStory = brewery
+    ? pick(locale, brewery.story_ko, brewery.story_en)
+    : null;
 
   // Schema.org Product — Google 검색 결과 rich snippet (카테고리·브랜드·가격) 활성화.
   // 알코올 음료를 위한 별도 type 이 schema.org 에 없어 Product + additionalProperty 로 표현.
@@ -207,11 +224,11 @@ export default async function ProductDetailPage({
             </Link>
           </>
         )}
-        {brewery && (
+        {brewery && breweryName && (
           <>
             {" · "}
             <Link href={`/breweries/${brewery.id}`} className="hover:text-foreground">
-              {brewery.name_ko}
+              {breweryName}
             </Link>
           </>
         )}
@@ -222,7 +239,7 @@ export default async function ProductDetailPage({
         <div>
           <PhotoPlaceholder
             src={product.image_url}
-            alt={product.name_ko}
+            alt={productName}
             aspectRatio="1/1"
             category={product.category}
           />
@@ -235,18 +252,18 @@ export default async function ProductDetailPage({
             </div>
           )}
           <h1 className="mt-3 font-serif text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-            {product.name_ko}
+            {productName}
           </h1>
-          {product.name_en && (
-            <p className="mt-2 text-lg text-muted-foreground">{product.name_en}</p>
+          {productNameAlt && (
+            <p className="mt-2 text-lg text-muted-foreground">{productNameAlt}</p>
           )}
-          {brewery && (
+          {brewery && breweryName && (
             <p className="mt-4 text-base">
               <Link
                 href={`/breweries/${brewery.id}`}
                 className="font-medium hover:underline"
               >
-                {brewery.name_ko}
+                {breweryName}
               </Link>
               {brewery.region && (
                 <span className="text-muted-foreground"> · {brewery.region}</span>
@@ -278,14 +295,16 @@ export default async function ProductDetailPage({
       {/* 맛 프로필 + 본문 섹션들 */}
       <div className="mt-16 grid gap-12 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="space-y-12">
-          <Section title="맛 노트">
-            {product.tasting_notes_ko ? (
+          <Section title={locale === "en" ? "Tasting notes" : "맛 노트"}>
+            {tastingNotes ? (
               <p className="whitespace-pre-line text-[1.0625rem] leading-[1.8]">
-                {product.tasting_notes_ko}
+                {tastingNotes}
               </p>
             ) : (
               <p className="text-sm italic text-muted-foreground">
-                큐레이팅된 맛 노트가 곧 제공됩니다.
+                {locale === "en"
+                  ? "Curated tasting notes coming soon."
+                  : "큐레이팅된 맛 노트가 곧 제공됩니다."}
               </p>
             )}
           </Section>
@@ -315,16 +334,22 @@ export default async function ProductDetailPage({
             </Section>
           )}
 
-          {brewery?.story_ko && (
-            <Section title={`${brewery.name_ko} 이야기`}>
+          {brewery && breweryStory && (
+            <Section
+              title={
+                locale === "en"
+                  ? `About ${breweryName}`
+                  : `${breweryName} 이야기`
+              }
+            >
               <blockquote className="border-l-2 border-primary/30 pl-5 italic leading-relaxed text-muted-foreground">
-                {brewery.story_ko}
+                {breweryStory}
               </blockquote>
               <Link
                 href={`/breweries/${brewery.id}`}
                 className="mt-4 inline-block text-sm underline underline-offset-4 hover:text-primary"
               >
-                양조장 자세히 보기 →
+                {locale === "en" ? "Learn more about the brewery →" : "양조장 자세히 보기 →"}
               </Link>
             </Section>
           )}
@@ -346,26 +371,31 @@ export default async function ProductDetailPage({
             />
           </div>
 
-          {sameBrewery.length > 0 && brewery && (
+          {sameBrewery.length > 0 && brewery && breweryName && (
             <div className="rounded-xl border bg-card p-6">
               <h3 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                {brewery.name_ko} 의 다른 제품
+                {locale === "en"
+                  ? `More from ${breweryName}`
+                  : `${breweryName} 의 다른 제품`}
               </h3>
               <ul className="space-y-3">
-                {sameBrewery.map((r) => (
-                  <li key={r.id}>
-                    <Link
-                      href={`/products/${r.id}`}
-                      className="group block"
-                    >
-                      <div className="font-medium group-hover:underline">{r.name_ko}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {r.category}
-                        {r.abv != null && ` · ${r.abv}%`}
-                      </div>
-                    </Link>
-                  </li>
-                ))}
+                {sameBrewery.map((r) => {
+                  const rName = pick(locale, r.name_ko, r.name_en) ?? r.name_ko;
+                  return (
+                    <li key={r.id}>
+                      <Link
+                        href={`/products/${r.id}`}
+                        className="group block"
+                      >
+                        <div className="font-medium group-hover:underline">{rName}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {r.category}
+                          {r.abv != null && ` · ${r.abv}%`}
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
@@ -395,6 +425,8 @@ export default async function ProductDetailPage({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {similar.map((p) => {
               const b = Array.isArray(p.breweries) ? p.breweries[0] : p.breweries;
+              const pName = pick(locale, p.name_ko, p.name_en) ?? p.name_ko;
+              const bName = b ? (pick(locale, b.name_ko, b.name_en) ?? b.name_ko) : null;
               return (
                 <Link
                   key={p.id}
@@ -402,10 +434,10 @@ export default async function ProductDetailPage({
                   className="group flex flex-col rounded-lg border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/30"
                 >
                   <div className="font-serif text-lg font-medium group-hover:underline">
-                    {p.name_ko}
+                    {pName}
                   </div>
                   <div className="mt-1 text-sm text-muted-foreground">
-                    {b?.name_ko} {b?.region && <span className="opacity-70">· {b.region}</span>}
+                    {bName} {b?.region && <span className="opacity-70">· {b.region}</span>}
                   </div>
                   <div className="mt-3 flex gap-3 text-xs text-muted-foreground">
                     {p.abv != null && <span>{p.abv}%</span>}
