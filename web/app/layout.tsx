@@ -67,7 +67,12 @@ export const metadata: Metadata = {
   },
   description: "한국 전통주·막걸리·소주·과실주를 발견하고 기록하는 곳. Korean alcohol, curated.",
   verification: {
-    google: "gPIy7t5wc1y1qXzIfYvHYdFlIOSQKTzrBRG_ruL7670",
+    // sooly.vercel.app + sooly.co.kr 둘 다 동일 빌드라 두 verification 태그를
+    // head 에 동시 노출 → 두 속성 모두 인증 가능. Next.js Metadata 가 array 지원.
+    google: [
+      "gPIy7t5wc1y1qXzIfYvHYdFlIOSQKTzrBRG_ruL7670", // sooly.vercel.app
+      "alf0maWWk0xgKxeUDQ_QjXvaHQsD3NhqQsjeKXsA4ZI", // sooly.co.kr
+    ],
   },
 };
 
