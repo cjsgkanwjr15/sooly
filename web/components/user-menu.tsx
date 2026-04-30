@@ -79,6 +79,15 @@ export function UserMenu({
             </Link>
           )}
 
+          <Link
+            href="/settings"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block border-b border-border/60 px-3 py-2 transition-colors hover:bg-foreground/5"
+          >
+            설정
+          </Link>
+
           <form action={signOut}>
             <button
               type="submit"

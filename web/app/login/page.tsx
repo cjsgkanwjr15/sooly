@@ -38,6 +38,11 @@ export default async function LoginPage({
             로그인 링크가 만료되었거나 유효하지 않아요. 다시 시도해주세요.
           </p>
         )}
+        {error === "oauth" && (
+          <p className="mt-4 text-sm text-destructive">
+            소셜 로그인 시작에 실패했어요. 잠시 후 다시 시도해주세요.
+          </p>
+        )}
       </div>
 
       <p className="mt-10 text-xs text-muted-foreground">

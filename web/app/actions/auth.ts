@@ -11,6 +11,13 @@ const emailSchema = z
   .max(254)
   .trim();
 
+const nextSchema = z
+  .string()
+  .max(512)
+  .refine((v) => v.startsWith("/") && !v.startsWith("//"), {
+    message: "invalid next path",
+  });
+
 export type LoginState = {
   status: "idle" | "sent" | "error";
   message?: string;
@@ -75,4 +82,47 @@ export async function signOut() {
   await sb.auth.signOut();
   revalidatePath("/", "layout");
   redirect("/");
+}
+
+/**
+ * OAuth provider 로 로그인 시작 (공통 로직).
+ * `<form action={signInWithGoogle | signInWithKakao}>` 가 호출.
+ *
+ * 흐름:
+ *   1. 이 액션 호출 → Supabase 가 provider authorize URL 발급 (PKCE)
+ *   2. 우리가 그 URL 로 302 redirect
+ *   3. 사용자 동의 → provider 가 Supabase 콜백으로 redirect
+ *   4. Supabase 가 ${SITE_URL}/auth/callback?code=... 로 redirect
+ *   5. 기존 /auth/callback 라우트가 code 를 세션으로 교환 → next 경로로 이동
+ */
+async function startOAuth(
+  provider: "google" | "kakao",
+  formData: FormData,
+): Promise<never> {
+  const rawNext = (formData.get("next") as string | null) ?? "/";
+  const nextParsed = nextSchema.safeParse(rawNext);
+  const next = nextParsed.success ? nextParsed.data : "/";
+
+  const callback = new URL(`${env.NEXT_PUBLIC_SITE_URL}/auth/callback`);
+  callback.searchParams.set("next", next);
+
+  const sb = await supabaseServer();
+  const { data, error } = await sb.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo: callback.toString() },
+  });
+
+  if (error || !data?.url) {
+    redirect(`/login?error=oauth&next=${encodeURIComponent(next)}`);
+  }
+
+  redirect(data.url);
+}
+
+export async function signInWithGoogle(formData: FormData) {
+  await startOAuth("google", formData);
+}
+
+export async function signInWithKakao(formData: FormData) {
+  await startOAuth("kakao", formData);
 }

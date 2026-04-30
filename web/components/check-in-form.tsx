@@ -104,7 +104,7 @@ export function CheckInForm({
       {/* 별점 */}
       <div>
         <div className="text-xs uppercase tracking-wider text-muted-foreground">
-          별점
+          별점 <span className="text-destructive/80">*</span>
         </div>
         <div
           className="mt-2 flex items-center gap-1"
@@ -129,9 +129,13 @@ export function CheckInForm({
               </span>
             </button>
           ))}
-          {rating > 0 && (
+          {rating > 0 ? (
             <span className="ml-2 text-sm text-muted-foreground">
               {rating}점
+            </span>
+          ) : (
+            <span className="ml-2 text-xs text-muted-foreground/80">
+              별 1~5개를 눌러주세요
             </span>
           )}
         </div>

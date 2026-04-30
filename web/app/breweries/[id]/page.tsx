@@ -4,6 +4,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { BreweryContentSlot } from "@/components/brewery-content-slot";
 import { JsonLd } from "@/components/json-ld";
+import { Stars } from "@/components/rating-display";
 import { env } from "@/lib/env";
 import { getLocale, pick } from "@/lib/locale";
 import type { Metadata } from "next";
@@ -31,6 +32,12 @@ type BreweryProduct = {
   category: string | null;
   abv: number | null;
   volume_ml: number | null;
+  image_url: string | null;
+};
+
+type ProductWithRating = BreweryProduct & {
+  avgRating: number | null;
+  ratingCount: number;
 };
 
 async function getBrewery(id: string) {
@@ -68,12 +75,51 @@ export default async function BreweryDetailPage({
   if (!brewery) notFound();
 
   const sb = await supabaseServer();
-  const { data: products } = await sb
+  const { data: productsRaw } = await sb
     .from("products")
-    .select("id, name_ko, name_en, category, abv, volume_ml")
+    .select("id, name_ko, name_en, category, abv, volume_ml, image_url")
     .eq("brewery_id", id)
-    .order("name_ko")
     .returns<BreweryProduct[]>();
+
+  const products = productsRaw ?? [];
+
+  // 양조장 모든 제품의 별점 한 번에 집계 (별도 쿼리, application 집계).
+  // RLS check_ins_select 가 public read 라 anon 권한으로도 조회 가능.
+  let productsWithRating: ProductWithRating[] = [];
+  if (products.length > 0) {
+    const productIds = products.map((p) => p.id);
+    const { data: checkIns } = await sb
+      .from("check_ins")
+      .select("product_id, rating")
+      .in("product_id", productIds);
+
+    const ratingMap = new Map<string, number[]>();
+    for (const c of checkIns ?? []) {
+      const arr = ratingMap.get(c.product_id) ?? [];
+      arr.push(c.rating);
+      ratingMap.set(c.product_id, arr);
+    }
+
+    productsWithRating = products.map((p) => {
+      const ratings = ratingMap.get(p.id) ?? [];
+      const avg =
+        ratings.length > 0
+          ? ratings.reduce((s, r) => s + r, 0) / ratings.length
+          : null;
+      return { ...p, avgRating: avg, ratingCount: ratings.length };
+    });
+
+    // 정렬: 별점 있는 거 위 (별점 desc → 체크인 수 desc), 없는 거는 이름 가나다순.
+    productsWithRating.sort((a, b) => {
+      if (a.avgRating != null && b.avgRating != null) {
+        if (b.avgRating !== a.avgRating) return b.avgRating - a.avgRating;
+        return b.ratingCount - a.ratingCount;
+      }
+      if (a.avgRating != null) return -1;
+      if (b.avgRating != null) return 1;
+      return a.name_ko.localeCompare(b.name_ko, "ko");
+    });
+  }
 
   const locale = await getLocale();
   const breweryName = pick(locale, brewery.name_ko, brewery.name_en) ?? brewery.name_ko;
@@ -222,33 +268,77 @@ export default async function BreweryDetailPage({
         <BreweryContentSlot variant="brewery" breweryName={breweryName} />
       </section>
 
-      {products && products.length > 0 && (
+      {productsWithRating.length > 0 && (
         <section className="mb-10">
-          <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            {locale === "en" ? "Products" : "제품"}{" "}
-            <span className="text-foreground">{products.length}</span>
-          </h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {products.map((p) => {
+          <div className="mb-5 flex items-end justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                {locale === "en"
+                  ? `From ${breweryName}`
+                  : `${breweryName} 의 제품`}
+              </p>
+              <h2 className="mt-1 font-serif text-2xl font-semibold tracking-tight">
+                {locale === "en" ? "Lineup" : "라인업"}{" "}
+                <span className="text-muted-foreground">
+                  {productsWithRating.length}
+                </span>
+              </h2>
+            </div>
+          </div>
+
+          <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {productsWithRating.map((p) => {
               const pName = pick(locale, p.name_ko, p.name_en) ?? p.name_ko;
               return (
-                <Link
-                  key={p.id}
-                  href={`/products/${p.id}`}
-                  className="group rounded-md border bg-card p-4 transition-colors hover:border-primary/30"
-                >
-                  <div className="font-serif text-base font-medium leading-snug group-hover:underline">
-                    {pName}
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {p.category}
-                    {p.abv != null && ` · ${p.abv}%`}
-                    {p.volume_ml != null && ` · ${p.volume_ml}ml`}
-                  </div>
-                </Link>
+                <li key={p.id}>
+                  <Link
+                    href={`/products/${p.id}`}
+                    className="group flex h-full flex-col rounded-xl border bg-card transition-all hover:-translate-y-0.5 hover:border-primary/30"
+                  >
+                    <div className="overflow-hidden rounded-t-xl">
+                      <PhotoPlaceholder
+                        src={p.image_url}
+                        alt={pName}
+                        aspectRatio="4/3"
+                        category={p.category}
+                      />
+                    </div>
+                    <div className="flex flex-1 flex-col p-4">
+                      <h3 className="font-serif text-lg font-medium leading-tight group-hover:underline">
+                        {pName}
+                      </h3>
+                      <div className="mt-1.5 text-xs text-muted-foreground">
+                        {p.category}
+                        {p.abv != null && ` · ${p.abv}%`}
+                        {p.volume_ml != null && ` · ${p.volume_ml}ml`}
+                      </div>
+                      <div className="mt-auto pt-3">
+                        {p.avgRating != null && p.ratingCount > 0 ? (
+                          <div className="flex items-baseline gap-2">
+                            <Stars value={p.avgRating} className="text-sm" />
+                            <span className="font-serif text-sm font-medium">
+                              {p.avgRating.toFixed(1)}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {locale === "en"
+                                ? `${p.ratingCount} check-ins`
+                                : `${p.ratingCount}회`}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground/70">
+                            {locale === "en"
+                              ? "No check-ins yet"
+                              : "아직 체크인 없음"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                </li>
               );
             })}
-          </div>
+          </ul>
         </section>
       )}
     </main>

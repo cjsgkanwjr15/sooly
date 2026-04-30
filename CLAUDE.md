@@ -449,6 +449,44 @@ CREATE INDEX idx_check_ins_product ON check_ins(product_id);
 - 4-25 service_role 2회 + 4-28 Gemini 1회 노출. 매번 burned 후 로테이션
 - `feedback_secret_in_chat.md` 메모리 추가 — 다음 세션부터 키 받기 *직전* 사전 차단
 
+### 2026-05-01: Google OAuth + 프로필 편집·통계 + 양조장 라인업 + 블로그 ko/en
+- **Google OAuth** — `signInWithGoogle` server action + LoginForm Google 버튼. PKCE 흐름,
+  기존 `/auth/callback` 이 code exchange 처리. dev/prod 둘 다 동작. Site URL = `sooly.co.kr` 통일.
+- **프로필 편집** — `/settings/profile` + `ProfileEditForm` + `updateProfile` action.
+  표시이름·사용자명 (2~20자, `^[a-z0-9_]+$`)·한 줄 소개. 예약어 차단, unique 충돌 처리, username
+  변경 시 `/u/{new}` redirect. `/settings` 인덱스도 추가.
+- **프로필 통계** — `/u/[username]` 에 카테고리별 분포 + 양조장 TOP 3 + 별점 히스토그램 + 30일
+  활동. 통계용 lightweight 쿼리 (no limit) + 그리드용 (60 limit) 분리.
+- **양조장 라인업 보강** — 빈약 카드 → 이미지 + 별점 + 정렬 (별점 desc → 체크인 수). N+1 회피
+  (`.in()` 한 번).
+- **블로그 ko/en 시스템** — `{slug}.{locale}.md` 강제. fallback 시 배너 ("이 글은 영어로만 작성").
+  welcome.en.md 영문판 수동 작성. AI 자동 번역은 다음 세션 별도 (`ai-translate-blog.ts`).
+
+### 2026-05-01: 카카오 OAuth = 비즈 인증 후로 미루기
+- 새 Kakao Developers UI 가 *개인 앱한테는 OAuth Redirect URI 등록 자체를 막아놨음*. 비즈 앱
+  인증 (사업자 정보 + 1~3일 심사) 받아야 풀림.
+- 코드 (`signInWithKakao` action + Kakao 버튼) 는 LoginForm 주석 블록으로 보존. 비즈 인증 후
+  주석 풀고 Supabase Providers 에 Client ID/Secret 입력하면 5분 만에 부활.
+- 매직 링크 + Google 만으로 Phase 1 진행. 카카오는 Kim 이 비즈 인증 신청 후 다음 세션 즈음.
+
+### 2026-05-01: 사용자명 시작 문자 제한 X
+- 자동 생성 username (`13wogns_502d` 처럼 숫자 시작) 도 사용자가 수정 가능해야 함.
+- 0004 trigger 의 정책 (`[a-z0-9_]` 만, 시작 제한 X) 과 form 검증 (`^[a-z0-9_]+$`) 일치.
+- Twitter/GitHub 식 letter-start 강제 안 함.
+
+### 2026-05-01: `/settings` = 인덱스 + sub 페이지 패턴
+- `/settings` 인덱스 (프로필 / 내 프로필 보기 / 언어 / 알림 준비중) + `/settings/profile` 편집.
+- user-menu 의 "프로필 설정" → "설정" (인덱스로) — discoverability ↑.
+- `/u/[username]` 의 "프로필 편집" 은 직접 편집 페이지 (자주 쓰는 fast-path).
+- 향후 알림·계정 삭제·연결된 OAuth 등 sub 추가 자리.
+
+### 2026-05-01: 블로그 파일명 = `{slug}.{locale}.md` 강제 + fallback 정책 (b)
+- 다른 옵션 (`/ko/welcome.md` 디렉토리, frontmatter 분리, 한 파일에 ko/en 본문) 대비 가장
+  명확. 같은 slug 페어링 자동.
+- Fallback: EN 사용자가 영문판 없는 글 클릭 시 → (a) 안 보임 vs **(b) 한국어로 표시 + 배너**.
+  (b) 채택 — 발견 가능성 ↑, 미공개보다 fallback 이 나음.
+- AI 자동 번역 파이프라인 (Phase 2 별도 세션) 끝나면 fallback 자연 해소.
+
 ---
 
 ## 13. 참고 외부 리소스
