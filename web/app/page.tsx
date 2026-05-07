@@ -2,8 +2,18 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { supabaseServer } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
+import { getLocale } from "@/lib/locale";
+import { getAllPosts } from "@/lib/blog";
 
 export const revalidate = 3600;
+
+type FeaturedBrewery = {
+  id: string;
+  name_ko: string;
+  region: string | null;
+  story_ko: string | null;
+  founded_year: number | null;
+};
 
 const CATEGORIES: Array<{ name: string; hint: string; emoji: string }> = [
   { name: "탁주", hint: "막걸리의 뿌리", emoji: "🍶" },
@@ -15,6 +25,7 @@ const CATEGORIES: Array<{ name: string; hint: string; emoji: string }> = [
 ];
 
 export default async function Home() {
+  const locale = await getLocale();
   const sb = await supabaseServer();
 
   const [
@@ -40,13 +51,31 @@ export default async function Home() {
     catMap.set(p.category, (catMap.get(p.category) ?? 0) + 1);
   }
 
-  // Featured brewery — 찾아가는 양조장 중 랜덤 하나
-  const { data: featuredBrewery } = await sb
+  // Featured brewery — 1순위 찾아가는 양조장, 없으면 임의 양조장 (revalidate=3600 라
+  // 시간당 한 번 변경). is_visiting_brewery flag 가 아직 채워지지 않았어도 빈 영역
+  // 없이 항상 한 곳을 노출.
+  let featuredBrewery: FeaturedBrewery | null = null;
+  const { data: visiting } = await sb
     .from("breweries")
     .select("id, name_ko, region, story_ko, founded_year")
     .eq("is_visiting_brewery", true)
-    .limit(1)
-    .single();
+    .limit(1);
+  if (visiting && visiting.length > 0) {
+    featuredBrewery = visiting[0];
+  } else {
+    const { data: pool } = await sb
+      .from("breweries")
+      .select("id, name_ko, region, story_ko, founded_year")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (pool && pool.length > 0) {
+      featuredBrewery = pool[Math.floor(Math.random() * pool.length)];
+    }
+  }
+
+  // 최신 블로그 글 (Journal 섹션 카드용)
+  const allPosts = await getAllPosts(locale);
+  const latestPosts = allPosts.slice(0, 2);
 
   return (
     <main className="flex flex-col">
@@ -108,14 +137,19 @@ export default async function Home() {
               <Link
                 key={c.name}
                 href={`/categories/${encodeURIComponent(c.name)}`}
-                className="group rounded-xl border bg-card p-5 text-center transition-all hover:-translate-y-0.5 hover:border-primary/30"
+                className="group flex flex-col items-center rounded-xl border border-border/60 bg-card p-5 text-center transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-md"
               >
-                <div className="text-3xl sm:text-4xl" aria-hidden>{c.emoji}</div>
+                <div
+                  aria-hidden
+                  className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/5 text-3xl transition-colors group-hover:bg-primary/10 sm:h-16 sm:w-16 sm:text-4xl"
+                >
+                  {c.emoji}
+                </div>
                 <div className="mt-3 font-serif text-base font-medium group-hover:underline">
                   {c.name}
                 </div>
                 <div className="mt-0.5 text-xs text-muted-foreground">{c.hint}</div>
-                <div className="mt-2 text-[10px] uppercase tracking-wider text-primary/70">
+                <div className="mt-2 text-xs font-semibold text-primary">
                   {catMap.get(c.name) ?? 0}개
                 </div>
               </Link>
@@ -214,26 +248,66 @@ export default async function Home() {
         </section>
       )}
 
-      {/* ===== Journal Teaser ===== */}
+      {/* ===== Journal — 실제 최신 글 카드 ===== */}
       <section className="border-t bg-[color-mix(in_oklab,var(--color-primary)_3%,var(--color-background))]">
-        <div className="mx-auto max-w-5xl px-6 py-20">
-          <div className="max-w-2xl">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">
-              Journal
-            </p>
-            <h2 className="mt-1 font-serif text-3xl font-semibold tracking-tight">
-              마시는 즐거움, 읽는 깊이
-            </h2>
-            <p className="mt-4 leading-relaxed text-muted-foreground">
-              양조장 방문기, 페어링 가이드, 전통주의 역사. 한국술을 더 풍성하게 즐기기 위한 읽을거리.
-            </p>
+        <div className="mx-auto max-w-6xl px-6 py-20">
+          <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
+            <div className="max-w-2xl">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                Journal
+              </p>
+              <h2 className="mt-1 font-serif text-3xl font-semibold tracking-tight">
+                마시는 즐거움, 읽는 깊이
+              </h2>
+              <p className="mt-3 leading-relaxed text-muted-foreground">
+                양조장 방문기, 페어링 가이드, 전통주의 역사. 한국술을 더 풍성하게 즐기기 위한 읽을거리.
+              </p>
+            </div>
             <Link
               href="/blog"
-              className="mt-6 inline-block text-sm font-medium underline underline-offset-4 hover:text-primary"
+              className="text-sm font-medium underline-offset-4 hover:text-primary hover:underline"
             >
-              블로그 읽으러 가기 →
+              전체 글 보기 →
             </Link>
           </div>
+
+          {latestPosts.length > 0 ? (
+            <div className="grid gap-6 sm:grid-cols-2">
+              {latestPosts.map((post) => (
+                <Link
+                  key={`${post.slug}-${post.locale}`}
+                  href={`/blog/${post.slug}`}
+                  className="group flex flex-col rounded-xl border border-border/60 bg-card p-7 transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-md"
+                >
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+                    <span>{post.date}</span>
+                    <span aria-hidden>·</span>
+                    <span>{post.readingMinutes}분</span>
+                    {post.locale !== locale && (
+                      <Badge variant="secondary" className="ml-1 text-[10px]">
+                        {post.locale.toUpperCase()}
+                      </Badge>
+                    )}
+                  </div>
+                  <h3 className="mt-3 font-serif text-2xl font-medium leading-snug group-hover:underline">
+                    {post.title}
+                  </h3>
+                  {post.excerpt && (
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground line-clamp-3">
+                      {post.excerpt}
+                    </p>
+                  )}
+                  <div className="mt-auto pt-5 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                    읽으러 가기 →
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-border/60 bg-card p-10 text-center text-sm text-muted-foreground">
+              곧 첫 글이 올라옵니다.
+            </div>
+          )}
         </div>
       </section>
 
