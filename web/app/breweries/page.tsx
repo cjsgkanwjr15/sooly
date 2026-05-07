@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { supabaseServer } from "@/lib/supabase/server";
 import { BreweriesFilter } from "@/components/breweries-filter";
 import { Pagination } from "@/components/pagination";
+import { sanitizeSearch } from "@/lib/search";
 
 export const metadata: Metadata = {
   title: "양조장",
@@ -48,7 +49,12 @@ export default async function BreweriesPage({
     .range(from, to);
 
   if (region) query = query.eq("region", region);
-  if (q) query = query.ilike("name_ko", `%${q}%`);
+  // sanitize 후 ko / en 둘 다 검색 (영문 핸들 입력 케이스 + 안전한 ilike 패턴).
+  const cleanQ = sanitizeSearch(q);
+  if (cleanQ) {
+    const pat = `%${cleanQ}%`;
+    query = query.or(`name_ko.ilike.${pat},name_en.ilike.${pat}`);
+  }
 
   const { data: breweries, error, count } = await query.returns<BreweryListItem[]>();
 

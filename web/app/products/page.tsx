@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { ProductFilters } from "@/components/product-filters";
 import { Stars } from "@/components/rating-display";
 import { Pagination } from "@/components/pagination";
+import { sanitizeSearch } from "@/lib/search";
 
 export const metadata: Metadata = {
   title: "제품",
@@ -61,10 +62,25 @@ export default async function ProductsPage({
 
   if (category) query = query.eq("category", category);
   if (region) query = query.eq("breweries.region", region);
-  if (q) {
-    query = query.or(
-      `name_ko.ilike.%${q}%,breweries.name_ko.ilike.%${q}%`,
-    );
+  // PostgREST `.or()` 는 nested foreign-key 칼럼을 직접 못 받아서 (예전엔
+  // `breweries.name_ko.ilike` 라 logic-tree parse 에러) brewery 매칭은 별도 쿼리로
+  // brewery_id 풀 만들고 main 검색은 products 의 자기 칼럼 + brewery_id IN 으로 합침.
+  // sanitizeSearch 가 ilike wildcard + PostgREST query 분리자 둘 다 escape.
+  const cleanQ = sanitizeSearch(q);
+  if (cleanQ) {
+    const pat = `%${cleanQ}%`;
+    const { data: breweryMatches } = await sb
+      .from("breweries")
+      .select("id")
+      .or(`name_ko.ilike.${pat},name_en.ilike.${pat}`)
+      .limit(200);
+    const breweryIds = (breweryMatches ?? []).map((b) => b.id);
+
+    const orParts = [`name_ko.ilike.${pat}`, `name_en.ilike.${pat}`];
+    if (breweryIds.length > 0) {
+      orParts.push(`brewery_id.in.(${breweryIds.join(",")})`);
+    }
+    query = query.or(orParts.join(","));
   }
 
   const { data, error, count } = await query.returns<ProductRow[]>();
