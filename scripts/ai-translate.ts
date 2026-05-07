@@ -103,10 +103,11 @@ function buildPrompt(row: RawRow): string {
 // ---------- gemini ----------
 // Primary 가 503 (capacity spike) 던지면 다음 모델로 자동 fallback.
 // 톤·품질은 셋 다 비슷 (한국어 → 영어 번역 수준 충분).
+// 2.0-flash 는 이전 라운드에서 5건 fail 시 별 도움 안 됐고, 1.5-flash 가 다른 capacity pool.
 const MODELS = [
   process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
-  "gemini-2.0-flash",
+  "gemini-1.5-flash",
 ];
 
 async function translateOne(
