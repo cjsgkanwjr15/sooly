@@ -417,7 +417,7 @@ CREATE INDEX idx_check_ins_product ON check_ins(product_id);
 ### 2026-04-25: 도메인 = `sooly.co.kr` 단독 (가비아)
 - `sooly.com` 점유, `sooly.kr` 점유 → `sooly.co.kr` available 하고 한국 소비자 대상에 충분
 - KIPRIS 주류 32·33류 "Sooly" 등록 없음 ✓
-- IG 핸들 `@sooly_kr` 가능 ✓
+- IG 핸들 `@sooly_hello` 개설 (2026-05-08, `@sooly_kr` 가능했지만 sooly + Gmail brand 와 묶어 `_hello` 일관)
 - `.io` / `.app` 은 글로벌 확장 결정 시점에 재검토 (지금 사봤자 1년 안에 결심 안 서면 매몰)
 - **현재 상태**: 결정만, 구매·DNS 연결은 다음 세션
 - 글로벌 확장 시점에 영문 콘텐츠는 `sooly.co.kr/en` 경로 또는 별도 .io/.com 도메인 검토
@@ -558,6 +558,34 @@ CREATE INDEX idx_check_ins_product ON check_ins(product_id);
   은 한국 마케팅 톤에 익숙 + Founding cohort 의 평생 락인·표기 가치 자연스럽게 전달됨.
 - 검증 행위는 별도 어휘로 분리: tier name = "공식", 행위 = "운영자 본인 확인", 신청 = "공식 양조장
   신청". tier 와 verification 두 layer 가 헷갈리지 않게.
+
+### 2026-05-08: Sooly IG = `@sooly_hello` 개설 (5-07 결정의 "콘텐츠 5~10개 후" 보다 일찍)
+- 핸들: **`@sooly_hello`** (`@sooly_kr` 가능했지만 `soolyhello@gmail.com` brand 와 묶어 통일).
+- 5-07 결정 ("콘텐츠 5~10개 깔고 공개") 보다 빨리 개설 — 양조장 outreach 메일에 IG 핸들
+  포함하려면 IG 가 살아 있어야 클릭 신뢰 가능. 단 5-07 의 "빈 계정 = 신뢰 즉사" 우려는 그대로
+  → **콘텐츠 5~10개 채워질 때까지는 사이트·outreach 메일 양쪽에 핸들 노출 X**, 채워진 후
+  통합. 그 사이에는 Kim 개인 IG 만 메일에 사용.
+- IG 프로필 사진 = `web/public/logo/sooly-ig-cream.png` (warm cream 1080×1080, sooly-ko.png
+  72% 너비). bio = "한국술 정보 글로벌 허브 🍶 / 우리 양조장의 이야기를 세계로 / 👇 sooly.co.kr".
+
+### 2026-05-08: 검색 query 안전화 (sanitize 헬퍼 + nested foreign-key 분리)
+**버그**: `/products?q=북극곰` 같은 검색에서 `failed to parse logic tree (...)` 에러.
+원인 둘:
+- PostgREST `.or()` 가 nested foreign-key 칼럼 (`breweries.name_ko`) 을 일반 syntax 로
+  못 받음 — Supabase JS docs 의 `referencedTable` 옵션이 OR 시점엔 1-table only.
+- 사용자 input 에 `%` `_` `,` `(` `)` 가 들어가면 query string parser 깨지거나 의도 외
+  wildcard 매칭. SQL injection 자체는 Supabase JS escape 가 막지만, query string layer
+  는 별개로 escape 필요.
+
+**fix**:
+- `web/lib/search.ts` — `sanitizeSearch(raw)`. ilike wildcard `%_\\` 를 `\` escape,
+  PostgREST 분리자 `,()` 를 공백 치환, 100자 cap (DoS 방지).
+- products 검색 — brewery 매칭은 별도 쿼리로 brewery_id 풀 만들고 main `.or()` 는
+  `name_ko.ilike, name_en.ilike, brewery_id.in.(ids)` 로 합침. 영문 검색도 같이 동작.
+- breweries 검색도 `name_ko + name_en` 둘 다 + sanitize.
+
+향후 검색 추가 시 (블로그·체크인 등) `sanitizeSearch` 재사용 + nested ref 매칭 시 미리
+ID 풀 빌드 → `.in()` 패턴 일관.
 
 ### 2026-05-08: 1기 양조장 4가지 약속 (사이트 명시)
 - 의사결정 직접 참여 (기능 우선순위·가격·약관)
