@@ -253,7 +253,7 @@ export default async function BreweryDetailPage({
         </section>
       )}
 
-      {breweryStory && (
+      {breweryStory ? (
         <section className="mb-10">
           <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
             {locale === "en" ? "Story" : "이야기"}
@@ -262,6 +262,25 @@ export default async function BreweryDetailPage({
             {breweryStory}
           </p>
         </section>
+      ) : (
+        <section className="mb-10 rounded-xl border border-dashed border-border bg-card/40 p-6">
+          <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+            {locale === "en" ? "Story" : "이야기"}
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            {locale === "en"
+              ? `The story, photos, and details for ${breweryName} are still being gathered. If you're from this brewery, you can help fill this page in.`
+              : `${breweryName} 의 이야기·사진·세부 정보는 아직 채워지는 중이에요. 양조장 측에서 직접 등록하시면 빠르게 반영됩니다.`}
+          </p>
+          <Link
+            href="/for-breweries"
+            className="mt-3 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {locale === "en"
+              ? "Brewery onboarding →"
+              : "양조장 등록 안내 →"}
+          </Link>
+        </section>
       )}
 
       <section className="mb-10">
@@ -269,7 +288,7 @@ export default async function BreweryDetailPage({
       </section>
 
       {productsWithRating.length > 0 && (
-        <section className="mb-10">
+        <section className="mb-12">
           <div className="mb-5 flex items-end justify-between">
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
@@ -341,6 +360,55 @@ export default async function BreweryDetailPage({
           </ul>
         </section>
       )}
+
+      {/* 운영자 CTA — 모든 양조장 페이지 공통. 양조장이 본인 페이지 보고 자발적 컨택 동선. */}
+      <BreweryOwnerCta locale={locale} breweryName={breweryName} />
     </main>
+  );
+}
+
+function BreweryOwnerCta({
+  locale,
+  breweryName,
+}: {
+  locale: "ko" | "en";
+  breweryName: string;
+}) {
+  const subject =
+    locale === "en"
+      ? `[Sooly] Brewery onboarding — ${breweryName}`
+      : `[Sooly] 양조장 등록 문의 — ${breweryName}`;
+  const mailto = `mailto:soolyhello@gmail.com?subject=${encodeURIComponent(subject)}`;
+
+  return (
+    <section className="mt-2 rounded-2xl border border-primary/25 bg-[color-mix(in_oklab,var(--color-primary)_4%,var(--color-background))] p-7">
+      <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
+        {locale === "en" ? "For breweries" : "양조장 운영자분께"}
+      </p>
+      <h3 className="mt-3 font-serif text-xl font-medium leading-snug">
+        {locale === "en"
+          ? `Are you from ${breweryName}?`
+          : `이 양조장 운영자이신가요?`}
+      </h3>
+      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+        {locale === "en"
+          ? "Sooly's free beta lets brewery owners verify their page, add photos and stories, and reply to check-ins. Get in touch and we'll set you up."
+          : "Sooly 는 양조장이 직접 페이지를 인증하고 사진·스토리·신제품 정보를 보강할 수 있도록 무료 베타 프로그램을 운영하고 있어요. 메일 주시면 5~10 양조장 1기로 모시고 셋업까지 안내드립니다."}
+      </p>
+      <div className="mt-5 flex flex-wrap gap-3">
+        <Link
+          href="/for-breweries"
+          className="rounded-md border border-primary/30 bg-background px-4 py-2 text-sm font-medium transition-colors hover:border-primary/50 hover:bg-primary/5"
+        >
+          {locale === "en" ? "How it works" : "자세히 보기"}
+        </Link>
+        <a
+          href={mailto}
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          {locale === "en" ? "Email Sooly" : "메일 보내기"}
+        </a>
+      </div>
+    </section>
   );
 }
