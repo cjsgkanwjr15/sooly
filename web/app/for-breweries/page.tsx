@@ -5,7 +5,7 @@ import { buttonVariants } from "@/components/ui/button";
 export const metadata: Metadata = {
   title: "양조장을 위한 Sooly",
   description:
-    "Sooly 는 한국술 정보 허브입니다. 1기 양조장 5~10곳을 모집해 함께 가격·기능을 정합니다. 공식 인증과 페이지 직접 관리는 앞으로도 무료, 분석·홍보 도구만 정식 출시 시 유료입니다.",
+    "Sooly 는 한국술 정보 허브입니다. 1기 양조장 5~10곳을 모집해 함께 가격·기능을 정합니다. 공식 양조장 등록과 페이지 직접 관리는 앞으로도 무료, 비즈니스 도구만 정식 출시 시 유료입니다.",
 };
 
 // mailto prefill — 양조장이 빈칸만 채울 수 있게 양식 미리 들어감.
@@ -49,7 +49,7 @@ export default function ForBreweriesPage() {
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             Sooly 는 양조장 {400}곳 이상과 제품 {800}종을 담은 한국술 정보 허브입니다.
-            1기 양조장과 함께 가격·기능을 정직하게 정하고, 공식 인증 페이지 운영은 앞으로도
+            1기 양조장과 함께 가격·기능을 정직하게 정하고, 공식 양조장 페이지 운영은 앞으로도
             무료로 운영합니다.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
@@ -73,24 +73,24 @@ export default function ForBreweriesPage() {
         </div>
       </section>
 
-      {/* 공식 인증 — 앞으로도 무료 */}
+      {/* 공식 양조장 — 앞으로도 무료 */}
       <section id="features" className="border-b px-6 py-20">
         <div className="mx-auto max-w-4xl">
           <p className="text-xs uppercase tracking-widest text-primary/70">
-            공식 인증 · 앞으로도 무료
+            공식 양조장 · 앞으로도 무료
           </p>
           <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">
             양조장이 직접 페이지를 관리합니다
           </h2>
           <p className="mt-5 max-w-2xl leading-relaxed text-muted-foreground">
-            공식 인증을 받은 양조장이 페이지를 직접 관리할 수 있는 다섯 가지 기능. 결제·약정 없고,
-            정식 출시 이후에도 영구 무료로 운영합니다. 메일 한 통이면 시작합니다.
+            공식 양조장으로 등록되면 페이지를 직접 관리할 수 있는 다섯 가지 기능을 쓰실 수 있어요.
+            결제·약정 없고, 정식 출시 이후에도 영구 무료로 운영합니다. 메일 한 통이면 시작합니다.
           </p>
           <ul className="mt-8 grid gap-5 sm:grid-cols-2">
             <Benefit
               num="01"
-              title="공식 인증 뱃지"
-              desc="양조장 페이지에 '공식 인증 ✓' 뱃지. 진짜 운영자가 관리하는 공간임을 사용자에게 명시."
+              title="공식 ✓ 뱃지"
+              desc="양조장 페이지에 '공식 ✓' 뱃지. 진짜 운영자가 관리하는 공간임을 사용자에게 명시."
             />
             <Benefit
               num="02"
@@ -132,15 +132,15 @@ export default function ForBreweriesPage() {
               <li className="flex gap-3">
                 <span className="font-serif text-primary">2.</span>
                 <span>
-                  <strong className="text-foreground">검증</strong> — Sooly 가
+                  <strong className="text-foreground">본인 확인</strong> — Sooly 가
                   보내주신 자료로 양조장 운영자 본인임을 확인합니다 (보통 1영업일).
                 </span>
               </li>
               <li className="flex gap-3">
                 <span className="font-serif text-primary">3.</span>
                 <span>
-                  <strong className="text-foreground">반영</strong> — 인증 완료
-                  후 양조장 페이지에 Verified 뱃지 + 보내주신 정보·사진이 24시간 내 게재됩니다.
+                  <strong className="text-foreground">반영</strong> — 본인 확인
+                  완료 후 양조장 페이지에 공식 ✓ 뱃지 + 보내주신 정보·사진이 24시간 내 게재됩니다.
                 </span>
               </li>
             </ol>
@@ -158,17 +158,17 @@ export default function ForBreweriesPage() {
             세 가지 단계 — 어디까지 무료, 어디부터 유료
           </h2>
           <p className="mt-4 max-w-2xl leading-relaxed text-muted-foreground">
-            Sooly 는 모든 양조장이 기본 등재되고, 운영자 인증을 받으면 페이지를 직접 관리할 수
-            있고 (앞으로도 무료), 분석·홍보 도구는 정식 출시 시 유료로 전환됩니다.
+            Sooly 는 모든 양조장이 기본 등재되고, 운영자 본인 확인 후 공식 양조장이 되면 페이지를
+            직접 관리할 수 있고 (앞으로도 무료), 비즈니스 도구는 정식 출시 시 유료로 전환됩니다.
           </p>
 
           <div className="mt-10 grid gap-5 lg:grid-cols-3">
             <PlanCard
               tone="muted"
-              name="기본 등재"
+              name="기본"
               price="무료"
               priceNote="자동 등재 — 신청 불필요"
-              tagline="Sooly 카탈로그에 양조장·제품 자동 노출. 운영자 인증 없이도 누구나 발견 가능."
+              tagline="Sooly 카탈로그에 양조장·제품 자동 노출. 운영자 신청 없이도 누구나 발견 가능."
               features={[
                 "카탈로그·검색 자동 등재",
                 "사용자 체크인·별점 노출",
@@ -180,12 +180,12 @@ export default function ForBreweriesPage() {
               tone="primary"
               highlight
               badge="앞으로도 무료"
-              name="공식 인증"
+              name="공식"
               price="0원"
               priceNote="정식 출시 후에도 영구 무료"
               tagline="양조장 운영자가 페이지를 직접 관리. 사용자에게 '진짜 양조장이 운영하는 페이지' 신호."
               features={[
-                "공식 인증 ✓ 뱃지",
+                "공식 ✓ 뱃지",
                 "양조장 이야기·소개글 등재",
                 "공식 사진 업로드",
                 "제품 정보 수정",
@@ -195,7 +195,7 @@ export default function ForBreweriesPage() {
             <PlanCard
               tone="dim"
               badge="개발 중"
-              name="분석 & 홍보"
+              name="비즈니스"
               price="가격 미정"
               priceNote="1기 양조장과 함께 정함 (정식 출시 시 유료)"
               tagline="양조장 마케팅·데이터 도구. 사용자 행동 분석 + 능동적 홍보 채널."
@@ -307,16 +307,16 @@ export default function ForBreweriesPage() {
         <div className="mx-auto max-w-3xl">
           <h2 className="font-serif text-3xl font-semibold tracking-tight">자주 묻는 질문</h2>
           <div className="mt-10 space-y-5">
-            <Faq q="공식 인증은 정말 영구 무료인가요?">
-              네. 결제·카드 등록·약정 없음. 공식 인증 뱃지·양조장 이야기 등재·사진 업로드·제품 정보 수정·체크인 답변은 양조장 운영자라면 누구나 영구 무료로 쓰실 수 있습니다. 정식 출시 후에도 이 정책은 유지됩니다.
+            <Faq q="공식 양조장 등록은 정말 영구 무료인가요?">
+              네. 결제·카드 등록·약정 없음. 공식 ✓ 뱃지·양조장 이야기 등재·사진 업로드·제품 정보 수정·체크인 답변은 양조장 운영자라면 누구나 영구 무료로 쓰실 수 있습니다. 정식 출시 후에도 이 정책은 유지됩니다.
             </Faq>
-            <Faq q="유료 플랜 (분석 & 홍보) 가격은 얼마인가요?">
+            <Faq q="유료 플랜 (비즈니스) 가격은 얼마인가요?">
               아직 정해지지 않았어요. 1기 양조장 5~10곳과 직접 만나서 정직한 가격을 함께 정할 계획입니다. 1기 양조장에 합류하시면 그 의사결정에 직접 참여하고, 정식 출시 시 첫 6개월 무료 + 평생 가격 락인 + 1기 양조장 표기를 받으실 수 있습니다.
             </Faq>
             <Faq q="지금 무료인 기능이 나중에 유료로 옮겨질 가능성도 있나요?">
-              없습니다. 공식 인증의 다섯 가지 기능 (인증 뱃지·이야기 등재·사진·제품 수정·체크인 답변) 은 Sooly 의 커뮤니티 자산이라 영구 무료입니다. 유료화는 분석·홍보 도구에만 적용됩니다.
+              없습니다. 공식 양조장의 다섯 가지 기능 (공식 ✓ 뱃지·이야기 등재·사진·제품 수정·체크인 답변) 은 Sooly 의 커뮤니티 자산이라 영구 무료입니다. 유료화는 비즈니스 도구에만 적용됩니다.
             </Faq>
-            <Faq q="인증은 어떻게 검증하나요?">
+            <Faq q="운영자 본인 확인은 어떻게 하나요?">
               사업자등록증 사본 / 양조장 공식 도메인 이메일 / 양조장 공식 인스타·홈페이지 운영 증명 중 하나면 됩니다. Sooly 가 직접 확인 후 1영업일 내 답신드려요.
             </Faq>
             <Faq q="제품 정보 수정·사진 업로드는 양조장이 직접 하나요?">
@@ -326,10 +326,10 @@ export default function ForBreweriesPage() {
               전국 1,300곳 양조장 중 약 400곳, 제품 791종이 이미 카탈로그에 있습니다. 메일로 양조장명 알려주시면 등록 여부 + 페이지 URL 을 답신드려요. 미등록 양조장도 신규 등록은 무료입니다.
             </Faq>
             <Faq q="1기 양조장 모집은 언제 마감되나요?">
-              5~10곳이 채워지면 마감하고 정식 출시 준비에 들어갑니다. 정확한 마감일은 정해두지 않았고, 신청 순서대로 검증 후 합류해주세요. 마감 후에는 일반 인증 신청은 계속 받지만 1기 혜택 (6개월 무료·평생 락인·1기 표기) 은 적용되지 않습니다.
+              5~10곳이 채워지면 마감하고 정식 출시 준비에 들어갑니다. 정확한 마감일은 정해두지 않았고, 신청 순서대로 본인 확인 후 합류해주세요. 마감 후에는 일반 공식 양조장 신청은 계속 받지만 1기 혜택 (6개월 무료·평생 락인·1기 표기) 은 적용되지 않습니다.
             </Faq>
             <Faq q="중간에 그만두고 싶으면 어떻게 하나요?">
-              언제든. 메일 한 통이면 인증 해제·정보 비공개 모두 가능하고, 데이터는 즉시 삭제 또는 비공개 처리됩니다. 1기 양조장도 마찬가지입니다.
+              언제든. 메일 한 통이면 공식 등록 해제·정보 비공개 모두 가능하고, 데이터는 즉시 삭제 또는 비공개 처리됩니다. 1기 양조장도 마찬가지입니다.
             </Faq>
           </div>
         </div>
@@ -429,7 +429,7 @@ function PlanCard({
   highlight?: boolean;
   badge?: string;
 }) {
-  // tone 마다 bg / border / 헤더 텍스트 색이 달라져 어떤 게 "지금 여기" (공식 인증) 인지 시각적으로
+  // tone 마다 bg / border / 헤더 텍스트 색이 달라져 어떤 게 "지금 여기" (공식) 인지 시각적으로
   // 강조. dim 은 "아직 개발 중" 느낌, primary 는 운영 중인 권장 플랜.
   const containerCls =
     tone === "primary"

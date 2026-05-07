@@ -398,8 +398,8 @@ function BreweryOwnerCta({
       </h3>
       <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
         {locale === "en"
-          ? "Sooly is recruiting a founding cohort of 5~10 breweries. The verification, story, photos, and check-in replies are free forever; analytics and promotion tools are co-designed and priced together with the cohort."
-          : "Sooly 는 1기 양조장 5~10곳을 모집해 가격·기능을 함께 정합니다. 공식 인증·이야기·사진·체크인 답변은 앞으로도 무료, 분석·홍보 도구만 1기 양조장과 함께 설계 후 정식 출시됩니다. 1기 합류 시 6개월 무료 + 평생 가격 락인."}
+          ? "Sooly is recruiting a founding cohort of 5~10 breweries. The official-page badge, story, photos, and check-in replies are free forever; the business tier (analytics & promotion) is co-designed and priced together with the cohort."
+          : "Sooly 는 1기 양조장 5~10곳을 모집해 가격·기능을 함께 정합니다. 공식 ✓ 뱃지·이야기·사진·체크인 답변은 앞으로도 무료, 비즈니스 도구만 1기 양조장과 함께 설계 후 정식 출시됩니다. 1기 합류 시 6개월 무료 + 평생 가격 락인."}
       </p>
       <div className="mt-5 flex flex-wrap gap-3">
         <Link
