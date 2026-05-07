@@ -487,6 +487,55 @@ CREATE INDEX idx_check_ins_product ON check_ins(product_id);
   (b) 채택 — 발견 가능성 ↑, 미공개보다 fallback 이 나음.
 - AI 자동 번역 파이프라인 (Phase 2 별도 세션) 끝나면 fallback 자연 해소.
 
+### 2026-05-07: i18n 인프라 = 직접 헬퍼 + Widen<typeof ko> 트릭 (next-intl 안 씀)
+- next-intl / next-i18next 는 **routing-based locale** (`/en/...`) 전제. sooly 는 cookie 기반
+  (`getLocale()`) 이라 충돌. 200개 키는 직접 헬퍼로 충분.
+- 구조: `lib/i18n/{ko,en,index}.ts`. ko 가 master (`as const`), en 은 `Widen<typeof ko>`
+  미러 — 키 누락 시 컴파일 에러, 다른 string 은 허용. `t(locale, "header.nav.products")`
+  type-safe DotPath 자동완성.
+- Server component = `getLocale()` 직접, client = locale prop drilling. (Context 는 더 많은
+  client 컴포넌트가 필요해질 때 도입.)
+- 이번 세션엔 chrome (header/footer/menu) 만 마이그레이션. 페이지·폼은 다음 세션 4시간 풀세트.
+
+### 2026-05-07: 양조장 outreach 시퀀스 = Kim 본인 발품 (chicken-egg breaking)
+- 트래픽 → 사진 vs 사진 → 트래픽 둘 다 답 X. 닭과 달걀.
+- **Third path = Kim 본인 5~10 양조장 직접 방문 → 사진·스토리·블로그·IG 4 자산 한 번에 생성
+  → 그걸로 다음 cohort 신뢰도 쌓기**. Untappd / Vivino 도 초창기 창업자 직접 방문 패턴.
+- 본인 IG (술 리뷰 4년 컨셉, 400+ 팔로워) = cold contact 의 결정적 무기. cold mail 보다
+  "팬으로서 방문" 진정성이 양조장 입장에서도 편함.
+- 첫 cohort 5곳 추천: 한강주조 / 같이양조장 / 한아양조 (서울 시내) + 과천도가 / 술샘 (경기 근거리).
+  단 **본인이 마셔본 / 좋아하는 곳 우선**.
+
+### 2026-05-07: Sooly IG `@sooly_kr` = 양조장 콘텐츠 5~10개 후 개설 (지금은 개인 IG)
+- 빈 계정 핸들을 outreach 메일에 적으면 양조장 클릭 시 신뢰 즉사. 차라리 빼는 게 100배 나음.
+- 첫 cohort outreach 는 Kim 개인 IG 핸들만 사용.
+- Sooly IG 개설 로드맵: 양조장 1~2곳 방문 후 핸들 선점 (비공개) → 5~10곳 콘텐츠 깔고 한 번에
+  공개. "텅 빈 새 계정" 첫인상 회피.
+
+### 2026-05-07: Featured Brewery fallback = visiting → 최근 등록 랜덤 (visiting flag 백필 전)
+- DB 의 `is_visiting_brewery` 칼럼이 import 시 안 채워져서 (raw data 미포함) 0건. `.single()`
+  으로 쿼리하던 홈 Featured 섹션이 통째로 silent hide.
+- 임시 fallback: visiting=true 1순위 → 없으면 최근 등록 20개 중 랜덤 (`revalidate=3600` 으로
+  시간당 변경). 항상 한 양조장 노출.
+- visiting flag 백필 (더술닷컴 visitingBrewery 페이지 크롤링) 끝나면 1순위 자연 활성화.
+
+### 2026-05-07: DB import 한계 = `is_visiting_brewery` + `breweries.instagram` 칼럼 미채움
+- 더술닷컴 raw 데이터에 두 정보 없거나, import 로직이 그 칼럼들 안 채움.
+- 영향: cohort 점수화 (`scripts/find-brewery-cohort.ts`) 가 사실상 "제품 수 + website" 만으로
+  동작. visiting + IG 신호 무력화.
+- 다음 세션 후보:
+  1. 더술닷컴 visitingBrewery 페이지 크롤링 → `is_visiting_brewery` 백필 (~30~40분)
+  2. 양조장 IG 핸들 별도 수집 — Kim 이 cohort 5곳 customize 하면서 알게 된 것부터 reflect
+
+### 2026-05-07: Hero split layout + decoration 강화 (홈 visual 풀세트)
+- 이전 hero: 단일 컬럼, 우측 50% 텅 빔, decoration 6% opacity (안 보임), gradient 6% (미묘),
+  stats flat dl, py-32 (한 화면 hero 만).
+- 변경: 좌·우 split (lg+, 우측 "오늘의 술" mini card with pulsing dot), 두 번째 vessel
+  좌측 하단 회전 추가, dot pattern 5%, gradient 14%, stats 4-카드 + 천 단위 콤마, py-24.
+- 모바일은 단일 컬럼 유지 (mini card hidden on <lg).
+- 일관성: 컨텐츠 중복 회피 — hero mini card = featured **product**, 아래 Featured Brewery
+  섹션 = 양조장. 분리됨.
+
 ---
 
 ## 13. 참고 외부 리소스
