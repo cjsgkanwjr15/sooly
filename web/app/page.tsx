@@ -81,39 +81,108 @@ export default async function Home() {
     <main className="flex flex-col">
       {/* ===== HERO ===== */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[color-mix(in_oklab,var(--color-primary)_6%,var(--color-background))] via-background to-background" />
-        <DecorativeVessel className="pointer-events-none absolute right-[-6%] top-[8%] -z-10 h-[520px] w-auto text-primary/[0.06] sm:right-[4%]" />
+        {/* Layered background: stronger gradient + subtle dot pattern + two decorative vessels */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[color-mix(in_oklab,var(--color-primary)_14%,var(--color-background))] via-[color-mix(in_oklab,var(--color-primary)_4%,var(--color-background))] to-background" />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 text-primary opacity-[0.05]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, currentColor 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+        <DecorativeVessel className="pointer-events-none absolute right-[-4%] top-[2%] -z-10 h-[560px] w-auto text-primary/[0.10] sm:h-[640px] lg:right-[-2%]" />
+        <DecorativeVessel className="pointer-events-none absolute -left-24 -bottom-32 -z-10 hidden h-[420px] w-auto rotate-12 text-primary/[0.05] lg:block" />
 
-        <div className="mx-auto max-w-5xl px-6 py-20 sm:py-28 lg:py-32">
-          <p className="font-kr-serif text-xs tracking-[0.3em] text-primary/70 uppercase">
-            Korean alcohol, curated
-          </p>
-          <h1 className="mt-6 font-serif text-[2.75rem] font-medium leading-[1.1] tracking-tight sm:text-[3.75rem] lg:text-[4.5rem]">
-            한국술을 <em className="not-italic text-primary">발견</em>하고,<br />
-            기록하고, 공유하세요.
-          </h1>
-          <p className="mt-7 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            전통주·막걸리·소주·과실주 {productCount ?? 0}종과 전국 양조장 {breweryCount ?? 0}곳.
-            이름만 알던 술의 맛·지역·양조장 이야기를 한 자리에서.
-          </p>
+        <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20 lg:py-24">
+          <div className="grid gap-12 lg:grid-cols-[1.55fr_1fr] lg:gap-16">
+            {/* Left — copy + CTAs */}
+            <div>
+              <p className="font-kr-serif text-xs tracking-[0.3em] text-primary/70 uppercase">
+                Korean alcohol, curated
+              </p>
+              <h1 className="mt-6 font-serif text-[2.75rem] font-medium leading-[1.1] tracking-tight sm:text-[3.75rem] lg:text-[4.5rem]">
+                한국술을 <em className="not-italic text-primary">발견</em>하고,
+                <br />
+                기록하고, 공유하세요.
+              </h1>
+              <p className="mt-7 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+                전통주·막걸리·소주·과실주 {productCount ?? 0}종과 전국 양조장{" "}
+                {breweryCount ?? 0}곳. 이름만 알던 술의 맛·지역·양조장 이야기를 한
+                자리에서.
+              </p>
 
-          <div className="mt-10 flex flex-wrap gap-3">
-            <Link href="/products" className={buttonVariants({ size: "lg" })}>
-              제품 둘러보기
-            </Link>
-            <Link
-              href="/breweries"
-              className={buttonVariants({ size: "lg", variant: "outline" })}
-            >
-              양조장 찾아보기
-            </Link>
+              <div className="mt-10 flex flex-wrap gap-3">
+                <Link href="/products" className={buttonVariants({ size: "lg" })}>
+                  제품 둘러보기
+                </Link>
+                <Link
+                  href="/breweries"
+                  className={buttonVariants({ size: "lg", variant: "outline" })}
+                >
+                  양조장 찾아보기
+                </Link>
+              </div>
+            </div>
+
+            {/* Right — "오늘의 술" mini-card (lg+) */}
+            {picks && picks[0] && (
+              <aside className="hidden self-center lg:block">
+                <Link
+                  href={`/products/${picks[0].id}`}
+                  className="group relative block overflow-hidden rounded-2xl border border-border/60 bg-card/80 p-7 shadow-sm backdrop-blur transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg"
+                >
+                  <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-primary/80">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60 opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                    </span>
+                    오늘의 술
+                  </div>
+                  {picks[0].category && (
+                    <Badge variant="secondary" className="mt-4 w-fit text-[10px]">
+                      {picks[0].category}
+                    </Badge>
+                  )}
+                  <div className="mt-3 font-serif text-2xl font-medium leading-snug group-hover:underline">
+                    {picks[0].name_ko}
+                  </div>
+                  {(() => {
+                    const brewery = Array.isArray(picks[0].breweries)
+                      ? picks[0].breweries[0]
+                      : picks[0].breweries;
+                    return brewery ? (
+                      <div className="mt-1.5 text-sm text-muted-foreground">
+                        {brewery.name_ko}
+                        {brewery.region && (
+                          <span className="ml-1 text-xs opacity-70">
+                            · {brewery.region}
+                          </span>
+                        )}
+                      </div>
+                    ) : null;
+                  })()}
+                  <div className="mt-5 flex items-center gap-3 text-xs text-muted-foreground">
+                    {picks[0].abv != null && <span>{picks[0].abv}%</span>}
+                    {picks[0].volume_ml != null && (
+                      <span>{picks[0].volume_ml}ml</span>
+                    )}
+                  </div>
+                  <div className="mt-5 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                    제품 페이지 →
+                  </div>
+                </Link>
+              </aside>
+            )}
           </div>
 
-          <dl className="mt-16 flex flex-wrap gap-x-10 gap-y-6 border-t pt-8 text-sm">
-            <Stat label="제품" value={productCount ?? 0} />
-            <Stat label="양조장" value={breweryCount ?? 0} />
-            <Stat label="지역" value={17} />
-            <Stat label="카테고리" value={6} />
+          {/* Stats — 카드형 (가로 4 박스) */}
+          <dl className="mt-16 grid grid-cols-2 gap-3 border-t pt-8 sm:grid-cols-4 sm:gap-4">
+            <StatCard label="제품" value={productCount ?? 0} suffix="종" />
+            <StatCard label="양조장" value={breweryCount ?? 0} suffix="곳" />
+            <StatCard label="지역" value={17} suffix="시도" />
+            <StatCard label="카테고리" value={6} suffix="종" />
           </dl>
         </div>
       </section>
@@ -315,11 +384,28 @@ export default async function Home() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function StatCard({
+  label,
+  value,
+  suffix,
+}: {
+  label: string;
+  value: number;
+  suffix?: string;
+}) {
   return (
-    <div>
-      <dt className="text-xs uppercase tracking-wider text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 font-serif text-2xl font-medium">{value}</dd>
+    <div className="rounded-xl border border-border/50 bg-card/60 px-4 py-3 backdrop-blur transition-colors hover:border-primary/30">
+      <dt className="text-[11px] uppercase tracking-wider text-muted-foreground">
+        {label}
+      </dt>
+      <dd className="mt-1 font-serif text-2xl font-medium leading-none">
+        {value.toLocaleString()}
+        {suffix && (
+          <span className="ml-1 text-sm font-normal text-muted-foreground">
+            {suffix}
+          </span>
+        )}
+      </dd>
     </div>
   );
 }
