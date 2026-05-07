@@ -1,6 +1,11 @@
 import Link from "next/link";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const locale = await getLocale();
+  const taglineSub = t(locale, "footer.taglineSub");
+
   return (
     <footer className="mt-auto border-t bg-[color-mix(in_oklab,var(--color-primary)_2%,var(--color-background))]">
       <div className="mx-auto max-w-6xl px-6 py-12">
@@ -8,43 +13,47 @@ export function SiteFooter() {
           <div>
             <div className="font-serif text-lg font-semibold text-primary">Sooly</div>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              한국 전통주·막걸리·소주·과실주 정보 허브.
-              <br />
-              Korean alcohol, curated.
+              {t(locale, "footer.tagline")}
+              {taglineSub && (
+                <>
+                  <br />
+                  {taglineSub}
+                </>
+              )}
             </p>
           </div>
 
           <FooterCol
-            title="둘러보기"
+            title={t(locale, "footer.sections.browse")}
             links={[
-              { href: "/products", label: "제품" },
-              { href: "/breweries", label: "양조장" },
-              { href: "/categories/탁주", label: "카테고리" },
-              { href: "/blog", label: "Journal" },
+              { href: "/products", label: t(locale, "header.nav.products") },
+              { href: "/breweries", label: t(locale, "header.nav.breweries") },
+              { href: "/categories/탁주", label: t(locale, "footer.categories") },
+              { href: "/blog", label: t(locale, "header.nav.journal") },
             ]}
           />
 
           <FooterCol
-            title="양조장"
+            title={t(locale, "footer.sections.breweries")}
             links={[
-              { href: "/for-breweries", label: "Verified 플랜" },
-              { href: "/for-breweries#features", label: "제공 기능" },
-              { href: "/for-breweries#contact", label: "등록 문의" },
+              { href: "/for-breweries", label: t(locale, "footer.verifiedPlan") },
+              { href: "/for-breweries#features", label: t(locale, "footer.features") },
+              { href: "/for-breweries#contact", label: t(locale, "footer.registerInquiry") },
             ]}
           />
 
           <FooterCol
-            title="About"
+            title={t(locale, "footer.sections.about")}
             links={[
-              { href: "/blog/welcome", label: "Sooly 소개" },
-              { href: "mailto:soolyhello@gmail.com", label: "문의하기" },
+              { href: "/blog/welcome", label: t(locale, "footer.aboutSooly") },
+              { href: "mailto:soolyhello@gmail.com", label: t(locale, "footer.contact") },
             ]}
           />
         </div>
 
         <div className="mt-10 border-t pt-6 text-xs text-muted-foreground">
-          <p>© 2026 Sooly · 한국술 정보 허브</p>
-          <p className="mt-1">일부 데이터 출처: 더술닷컴(aT)</p>
+          <p>{t(locale, "footer.copyright")}</p>
+          <p className="mt-1">{t(locale, "footer.dataSource")}</p>
         </div>
       </div>
     </footer>

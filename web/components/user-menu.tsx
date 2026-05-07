@@ -3,17 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { signOut } from "@/app/actions/auth";
+import { t } from "@/lib/i18n";
+import type { Locale } from "@/lib/locale";
 
 /**
  * 헤더 우측 사용자 아바타 + 드롭다운.
- * 서버에서 username/displayName 받아 렌더, 클릭 시 메뉴 열림.
+ * 서버에서 username/displayName + locale 받아 렌더, 클릭 시 메뉴 열림.
  */
 export function UserMenu({
   username,
   displayName,
+  locale,
 }: {
   username: string | null;
   displayName: string;
+  locale: Locale;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -46,7 +50,7 @@ export function UserMenu({
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="사용자 메뉴"
+        aria-label={t(locale, "userMenu.aria")}
         className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground/10 text-xs font-semibold text-foreground transition-colors hover:bg-foreground/15"
       >
         {initial}
@@ -75,7 +79,7 @@ export function UserMenu({
               onClick={() => setOpen(false)}
               className="block px-3 py-2 transition-colors hover:bg-foreground/5"
             >
-              내 프로필
+              {t(locale, "userMenu.myProfile")}
             </Link>
           )}
 
@@ -85,7 +89,7 @@ export function UserMenu({
             onClick={() => setOpen(false)}
             className="block border-b border-border/60 px-3 py-2 transition-colors hover:bg-foreground/5"
           >
-            설정
+            {t(locale, "userMenu.settings")}
           </Link>
 
           <form action={signOut}>
@@ -94,7 +98,7 @@ export function UserMenu({
               role="menuitem"
               className="block w-full cursor-pointer px-3 py-2 text-left transition-colors hover:bg-foreground/5"
             >
-              로그아웃
+              {t(locale, "userMenu.signOut")}
             </button>
           </form>
         </div>

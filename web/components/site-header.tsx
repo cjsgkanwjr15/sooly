@@ -4,6 +4,7 @@ import { SearchBar } from "@/components/search-bar";
 import { LocaleToggle } from "@/components/locale-toggle";
 import { UserMenu } from "@/components/user-menu";
 import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 import { supabaseServer } from "@/lib/supabase/server";
 
 export async function SiteHeader() {
@@ -30,19 +31,19 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-6">
-        <Link href="/" aria-label="Sooly 홈" className="shrink-0">
+        <Link href="/" aria-label={t(locale, "header.homeAria")} className="shrink-0">
           <Logo />
         </Link>
 
         <nav className="hidden items-center gap-5 text-sm text-muted-foreground sm:flex">
           <Link href="/products" className="transition-colors hover:text-foreground">
-            제품
+            {t(locale, "header.nav.products")}
           </Link>
           <Link href="/breweries" className="transition-colors hover:text-foreground">
-            양조장
+            {t(locale, "header.nav.breweries")}
           </Link>
           <Link href="/blog" className="transition-colors hover:text-foreground">
-            Journal
+            {t(locale, "header.nav.journal")}
           </Link>
         </nav>
 
@@ -51,6 +52,7 @@ export async function SiteHeader() {
           <LocaleToggle current={locale} />
           {user ? (
             <UserMenu
+              locale={locale}
               username={profile?.username ?? null}
               displayName={
                 profile?.display_name ?? user.email?.split("@")[0] ?? "User"
@@ -61,7 +63,7 @@ export async function SiteHeader() {
               href="/login"
               className="rounded-md border border-border/60 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-foreground/30 hover:bg-foreground/5"
             >
-              로그인
+              {t(locale, "header.login")}
             </Link>
           )}
         </div>
