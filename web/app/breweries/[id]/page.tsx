@@ -382,31 +382,37 @@ function BreweryOwnerCta({
 
   return (
     <section className="mt-2 rounded-2xl border border-primary/25 bg-[color-mix(in_oklab,var(--color-primary)_4%,var(--color-background))] p-7">
-      <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
-        {locale === "en" ? "For breweries" : "양조장 운영자분께"}
-      </p>
-      <h3 className="mt-3 font-serif text-xl font-medium leading-snug">
+      <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-background/60 px-3 py-1 text-[11px] font-medium text-primary">
+        <span className="relative flex h-1.5 w-1.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60 opacity-75" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+        </span>
+        {locale === "en"
+          ? "Founding cohort · 5~10 breweries"
+          : "1기 양조장 · 5~10곳 모집 중"}
+      </div>
+      <h3 className="mt-4 font-serif text-xl font-medium leading-snug">
         {locale === "en"
           ? `Are you from ${breweryName}?`
           : `이 양조장 운영자이신가요?`}
       </h3>
       <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
         {locale === "en"
-          ? "Sooly's free beta lets brewery owners verify their page, add photos and stories, and reply to check-ins. Get in touch and we'll set you up."
-          : "Sooly 는 양조장이 직접 페이지를 인증하고 사진·스토리·신제품 정보를 보강할 수 있도록 무료 베타 프로그램을 운영하고 있어요. 메일 주시면 5~10 양조장 1기로 모시고 셋업까지 안내드립니다."}
+          ? "Sooly is recruiting a founding cohort of 5~10 breweries. The verification, story, photos, and check-in replies are free forever; analytics and promotion tools are co-designed and priced together with the cohort."
+          : "Sooly 는 1기 양조장 5~10곳을 모집해 가격·기능을 함께 정합니다. 공식 인증·이야기·사진·체크인 답변은 앞으로도 무료, 분석·홍보 도구만 1기 양조장과 함께 설계 후 정식 출시됩니다. 1기 합류 시 6개월 무료 + 평생 가격 락인."}
       </p>
       <div className="mt-5 flex flex-wrap gap-3">
         <Link
           href="/for-breweries"
           className="rounded-md border border-primary/30 bg-background px-4 py-2 text-sm font-medium transition-colors hover:border-primary/50 hover:bg-primary/5"
         >
-          {locale === "en" ? "How it works" : "자세히 보기"}
+          {locale === "en" ? "Plan comparison" : "플랜 비교"}
         </Link>
         <a
           href={mailto}
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          {locale === "en" ? "Email Sooly" : "메일 보내기"}
+          {locale === "en" ? "Apply" : "신청하기"}
         </a>
       </div>
     </section>
