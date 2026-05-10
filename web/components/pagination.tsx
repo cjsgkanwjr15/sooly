@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/locale";
 
 type Props = {
   /** 현재 페이지 (1-based) */
@@ -9,8 +11,9 @@ type Props = {
   hrefForPage: (page: number) => string;
 };
 
-export function Pagination({ page, totalPages, hrefForPage }: Props) {
+export async function Pagination({ page, totalPages, hrefForPage }: Props) {
   if (totalPages <= 1) return null;
+  const locale = await getLocale();
 
   // 최대 7개 페이지 번호 표시 (현재 ± 2, 양 끝)
   const pages: Array<number | "ellipsis"> = [];
@@ -38,7 +41,7 @@ export function Pagination({ page, totalPages, hrefForPage }: Props) {
           href={hrefForPage(page - 1)}
           className={`${baseClass} border hover:border-primary/40 hover:text-primary`}
         >
-          ← 이전
+          ← {t(locale, "pagination.prev")}
         </Link>
       )}
       {pages.map((p, i) =>
@@ -64,7 +67,7 @@ export function Pagination({ page, totalPages, hrefForPage }: Props) {
           href={hrefForPage(page + 1)}
           className={`${baseClass} border hover:border-primary/40 hover:text-primary`}
         >
-          다음 →
+          {t(locale, "pagination.next")} →
         </Link>
       )}
     </nav>

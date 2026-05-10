@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
 type AspectRatio = "1/1" | "4/3" | "16/9" | "3/4";
 
@@ -29,10 +31,10 @@ const CATEGORY_ACCENT: Record<string, string> = {
 
 /**
  * 제품/양조장 사진 슬롯.
- * src 가 없으면 따뜻한 그라데이션 + "사진 준비중이에요 🍶" 귀엽게 표시.
+ * src 가 없으면 따뜻한 그라데이션 + locale-aware "사진 준비중" 표시.
  * src 가 있으면 Next.js Image 로 정상 렌더.
  */
-export function PhotoPlaceholder({
+export async function PhotoPlaceholder({
   src,
   alt,
   aspectRatio = "4/3",
@@ -41,7 +43,9 @@ export function PhotoPlaceholder({
 }: Props) {
   if (src) {
     return (
-      <div className={`relative overflow-hidden rounded-xl ${ASPECT_CLASS[aspectRatio]} ${className}`}>
+      <div
+        className={`relative overflow-hidden rounded-xl ${ASPECT_CLASS[aspectRatio]} ${className}`}
+      >
         <Image
           src={src}
           alt={alt}
@@ -53,8 +57,10 @@ export function PhotoPlaceholder({
     );
   }
 
+  const locale = await getLocale();
   const gradient =
-    (category && CATEGORY_ACCENT[category]) ?? "from-primary/10 via-primary/5 to-background";
+    (category && CATEGORY_ACCENT[category]) ??
+    "from-primary/10 via-primary/5 to-background";
 
   return (
     <div
@@ -69,12 +75,14 @@ export function PhotoPlaceholder({
       aria-label={alt}
     >
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
-        <span className="text-4xl" aria-hidden>🍶</span>
+        <span className="text-4xl" aria-hidden>
+          🍶
+        </span>
         <p className="font-serif text-sm text-foreground/70 sm:text-base">
-          사진 준비중이에요
+          {t(locale, "photoPlaceholder.primary")}
         </p>
         <p className="text-[10px] uppercase tracking-widest text-foreground/40">
-          Photo coming soon
+          {t(locale, "photoPlaceholder.secondary")}
         </p>
       </div>
     </div>

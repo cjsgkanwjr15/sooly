@@ -30,17 +30,35 @@ export type TKey = DotPath<Dict>;
  *   const locale = await getLocale();
  *   <h1>{t(locale, "header.nav.products")}</h1>
  *
+ * 매개변수 치환 (placeholder `{name}`):
+ *   t(locale, "pagination.pageOf", { page: 3, total: 10 })
+ *
  * Client Component 사용 예: 부모 (서버) 가 locale 을 prop 으로 내려주거나,
  * 향후 LocaleContext 로 감싸기 (지금은 prop drilling 으로 충분).
  *
  * 키 누락 시 fallback: ko 사전에서 찾기 → 그래도 없으면 path 자체를 반환 (디버깅용).
  */
-export function t(locale: Locale, path: TKey): string {
+export function t(
+  locale: Locale,
+  path: TKey,
+  vars?: Record<string, string | number>,
+): string {
   const fromLocale = resolve(dicts[locale], path);
-  if (typeof fromLocale === "string") return fromLocale;
-  // ko fallback (en 사전에 키 빠진 케이스 — 컴파일러가 잡지만 런타임 안전망)
-  const fromKo = resolve(dicts.ko, path);
-  return typeof fromKo === "string" ? fromKo : path;
+  let raw =
+    typeof fromLocale === "string"
+      ? fromLocale
+      : (() => {
+          // ko fallback (en 사전에 키 빠진 케이스 — 컴파일러가 잡지만 런타임 안전망)
+          const fromKo = resolve(dicts.ko, path);
+          return typeof fromKo === "string" ? fromKo : path;
+        })();
+
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      raw = raw.replaceAll(`{${k}}`, String(v));
+    }
+  }
+  return raw;
 }
 
 function resolve(obj: unknown, path: string): unknown {
@@ -50,4 +68,23 @@ function resolve(obj: unknown, path: string): unknown {
     }
     return undefined;
   }, obj);
+}
+
+/**
+ * Dynamic 한국어 키 매핑용 helper. DotPath 의 generic string 인자가 들어가는 타입
+ * narrowing 한계를 우회하면서도 사용처에서 namespace 별로 구분된 호출을 노출.
+ *
+ * 예: tCategory(locale, product.category)
+ *     tTaste(locale, "단맛")
+ */
+export function tCategory(locale: Locale, koValue: string): string {
+  return t(locale, `categories.${koValue}` as TKey);
+}
+
+export function tCategoryHint(locale: Locale, koValue: string): string {
+  return t(locale, `categoryHints.${koValue}` as TKey);
+}
+
+export function tTaste(locale: Locale, koValue: string): string {
+  return t(locale, `taste.${koValue}` as TKey);
 }

@@ -3,12 +3,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
-export const metadata: Metadata = {
-  title: "설정",
-  description: "프로필·언어 등 계정 설정을 관리합니다.",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return {
+    title: t(locale, "settings.metaTitle"),
+    description: t(locale, "settings.metaDescription"),
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function SettingsIndexPage() {
   const sb = await supabaseServer();
@@ -27,52 +31,42 @@ export default async function SettingsIndexPage() {
     .single();
 
   const locale = await getLocale();
-  const isEn = locale === "en";
   const displayName =
     profile?.display_name ?? user.email?.split("@")[0] ?? "User";
 
   return (
     <main className="mx-auto flex max-w-xl flex-1 flex-col px-6 py-12">
       <h1 className="font-serif text-3xl font-semibold tracking-tight">
-        {isEn ? "Settings" : "설정"}
+        {t(locale, "settings.h1")}
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        {isEn
-          ? `Signed in as ${displayName} (@${profile?.username ?? "—"}).`
-          : `${displayName} (@${profile?.username ?? "—"}) 로 로그인되어 있어요.`}
+        {t(locale, "settings.signedInAs", {
+          name: displayName,
+          username: profile?.username ?? "—",
+        })}
       </p>
 
       <ul className="mt-10 space-y-3">
         <SettingsRow
           href="/settings/profile"
-          title={isEn ? "Profile" : "프로필"}
-          subtitle={
-            isEn
-              ? "Display name, username, bio"
-              : "표시 이름·사용자명·한 줄 소개"
-          }
+          title={t(locale, "settings.rowProfile")}
+          subtitle={t(locale, "settings.rowProfileSub")}
         />
         {profile?.username && (
           <SettingsRow
             href={`/u/${profile.username}`}
-            title={isEn ? "View my profile" : "내 프로필 보기"}
-            subtitle={
-              isEn
-                ? "Public page with your check-ins"
-                : "공개 프로필·체크인 기록"
-            }
+            title={t(locale, "settings.rowMyProfile")}
+            subtitle={t(locale, "settings.rowMyProfileSub")}
           />
         )}
         <li className="rounded-xl border bg-card p-4">
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="font-serif text-base font-medium">
-                {isEn ? "Language" : "언어"}
+                {t(locale, "settings.rowLanguage")}
               </div>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {isEn
-                  ? "Toggle Korean / English from the header (KO · EN)."
-                  : "헤더 우측의 KO · EN 토글로 변경할 수 있어요."}
+                {t(locale, "settings.rowLanguageHint")}
               </p>
             </div>
             <span className="rounded-md bg-foreground/[0.06] px-2.5 py-1 font-mono text-xs">
@@ -81,9 +75,7 @@ export default async function SettingsIndexPage() {
           </div>
         </li>
         <li className="rounded-xl border border-dashed bg-card/50 p-4 text-sm text-muted-foreground">
-          {isEn
-            ? "Notifications, account deletion, and more — coming soon."
-            : "알림 설정·계정 삭제 등은 곧 추가됩니다."}
+          {t(locale, "settings.rowComingSoon")}
         </li>
       </ul>
     </main>
@@ -111,9 +103,7 @@ function SettingsRow({
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
         </div>
-        <span className="text-muted-foreground group-hover:text-primary">
-          →
-        </span>
+        <span className="text-muted-foreground group-hover:text-primary">→</span>
       </Link>
     </li>
   );

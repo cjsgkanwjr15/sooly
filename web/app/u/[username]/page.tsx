@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getLocale, pick, type Locale } from "@/lib/locale";
 import { PhotoPlaceholder } from "@/components/photo-placeholder";
+import { t, tCategory } from "@/lib/i18n";
 
 export const revalidate = 60;
 
@@ -78,12 +79,13 @@ export async function generateMetadata({
   params: Promise<{ username: string }>;
 }): Promise<Metadata> {
   const { username } = await params;
+  const locale = await getLocale();
   const profile = await getProfile(username);
-  if (!profile) return { title: "프로필 없음" };
+  if (!profile) return { title: t(locale, "profile.public.notFound") };
   const name = profile.display_name ?? `@${profile.username}`;
   return {
     title: `${name} (@${profile.username})`,
-    description: `${name} 의 한국술 체크인 기록.`,
+    description: t(locale, "profile.public.metaDescription", { name }),
   };
 }
 
@@ -165,40 +167,60 @@ export default async function UserProfilePage({
             href="/settings/profile"
             className="self-start rounded-md border border-border/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-foreground/5 hover:text-foreground"
           >
-            프로필 편집
+            {t(locale, "profile.public.editProfile")}
           </Link>
         )}
       </header>
 
       {/* Top stats row */}
       <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-3 border-y py-4 sm:grid-cols-4">
-        <Stat label="체크인" value={String(total)} />
-        <Stat label="평균 별점" value={avg ? `${avg} ★` : "—"} />
-        <Stat label="최근 30일" value={String(stats.last30Days)} />
-        <Stat label="활동 시작" value={formatJoined(stats.firstCheckInAt)} />
+        <Stat
+          label={t(locale, "profile.public.statCheckIns")}
+          value={String(total)}
+        />
+        <Stat
+          label={t(locale, "profile.public.statAverage")}
+          value={avg ? `${avg} ★` : t(locale, "profile.public.statEmpty")}
+        />
+        <Stat
+          label={t(locale, "profile.public.statLast30")}
+          value={String(stats.last30Days)}
+        />
+        <Stat
+          label={t(locale, "profile.public.statJoined")}
+          value={formatJoined(stats.firstCheckInAt, locale)}
+        />
       </dl>
 
       {/* Statistics cards — 체크인이 1개 이상일 때만 */}
       {total > 0 && (
         <section className="mt-10">
           <h2 className="mb-5 font-serif text-2xl font-semibold tracking-tight">
-            통계
+            {t(locale, "profile.public.statsH2")}
           </h2>
 
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
             {/* 카테고리 분포 — full width 위쪽 */}
             <div className="lg:col-span-3">
-              <CategoryBreakdown categories={stats.categories} total={total} />
+              <CategoryBreakdown
+                categories={stats.categories}
+                total={total}
+                locale={locale}
+              />
             </div>
 
             {/* 양조장 TOP 3 */}
             <div className="lg:col-span-2">
-              <BreweryTopThree breweries={stats.breweryTop3} />
+              <BreweryTopThree breweries={stats.breweryTop3} locale={locale} />
             </div>
 
             {/* 별점 분포 */}
             <div>
-              <RatingHistogram counts={stats.ratingCounts} total={total} />
+              <RatingHistogram
+                counts={stats.ratingCounts}
+                total={total}
+                locale={locale}
+              />
             </div>
           </div>
         </section>
@@ -207,23 +229,25 @@ export default async function UserProfilePage({
       {/* Check-ins grid */}
       <section className="mt-12">
         <h2 className="mb-6 font-serif text-2xl font-semibold tracking-tight">
-          마신 술
+          {t(locale, "profile.public.drunkH2")}
         </h2>
 
         {total === 0 ? (
           <div className="rounded-xl border border-dashed border-border/60 p-10 text-center">
-            <p className="font-serif text-lg">아직 체크인이 없어요</p>
+            <p className="font-serif text-lg">
+              {t(locale, "profile.public.emptyTitle")}
+            </p>
             <p className="mt-2 text-sm text-muted-foreground">
               {isMe
-                ? "마음에 드는 술 페이지에서 ★ 별점을 남겨보세요."
-                : "이 사용자는 아직 체크인을 남기지 않았습니다."}
+                ? t(locale, "profile.public.emptyMessageMine")
+                : t(locale, "profile.public.emptyMessageOther")}
             </p>
             {isMe && (
               <Link
                 href="/products"
                 className="mt-4 inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
               >
-                술 둘러보기
+                {t(locale, "profile.public.browseCta")}
               </Link>
             )}
           </div>
@@ -262,7 +286,7 @@ export default async function UserProfilePage({
                         {productName}
                       </h3>
                       <div className="mt-1 text-xs text-muted-foreground">
-                        {product.category}
+                        {product.category && tCategory(locale, product.category)}
                         {product.abv != null && ` · ${product.abv}%`}
                       </div>
                       {c.pairing && (
@@ -397,18 +421,20 @@ function computeStats(rows: StatRow[], locale: Locale): ComputedStats {
 function CategoryBreakdown({
   categories,
   total,
+  locale,
 }: {
   categories: Array<{ name: string; count: number }>;
   total: number;
+  locale: Locale;
 }) {
   return (
     <div className="rounded-xl border bg-card p-5">
       <h3 className="text-xs uppercase tracking-wider text-muted-foreground">
-        카테고리별 분포
+        {t(locale, "profile.public.categoryBreakdownH3")}
       </h3>
       {categories.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">
-          아직 카테고리 데이터가 없어요.
+          {t(locale, "profile.public.categoryBreakdownEmpty")}
         </p>
       ) : (
         <ul className="mt-4 space-y-2.5">
@@ -417,7 +443,7 @@ function CategoryBreakdown({
             return (
               <li key={c.name} className="flex items-center gap-3">
                 <span className="w-16 shrink-0 text-sm text-foreground/85">
-                  {c.name}
+                  {tCategory(locale, c.name)}
                 </span>
                 <div className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-foreground/[0.06]">
                   <div
@@ -439,17 +465,19 @@ function CategoryBreakdown({
 
 function BreweryTopThree({
   breweries,
+  locale,
 }: {
   breweries: Array<{ id: string; name: string; count: number }>;
+  locale: Locale;
 }) {
   return (
     <div className="rounded-xl border bg-card p-5">
       <h3 className="text-xs uppercase tracking-wider text-muted-foreground">
-        좋아하는 양조장 TOP 3
+        {t(locale, "profile.public.breweryTopH3")}
       </h3>
       {breweries.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">
-          체크인을 더 남겨보세요.
+          {t(locale, "profile.public.breweryTopEmpty")}
         </p>
       ) : (
         <ol className="mt-4 space-y-3">
@@ -472,7 +500,9 @@ function BreweryTopThree({
                 {b.name}
               </Link>
               <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                체크인 {b.count}회
+                {t(locale, "profile.public.breweryCheckInCount", {
+                  count: b.count,
+                })}
               </span>
             </li>
           ))}
@@ -485,15 +515,17 @@ function BreweryTopThree({
 function RatingHistogram({
   counts,
   total,
+  locale,
 }: {
   counts: number[];
   total: number;
+  locale: Locale;
 }) {
   const max = Math.max(...counts, 1);
   return (
     <div className="rounded-xl border bg-card p-5">
       <h3 className="text-xs uppercase tracking-wider text-muted-foreground">
-        별점 분포
+        {t(locale, "profile.public.ratingHistogramH3")}
       </h3>
       <ul className="mt-4 space-y-2">
         {[5, 4, 3, 2, 1].map((star) => {
@@ -542,8 +574,11 @@ function formatDate(iso: string): string {
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function formatJoined(iso: string | null): string {
-  if (!iso) return "—";
+function formatJoined(iso: string | null, locale: Locale): string {
+  if (!iso) return t(locale, "profile.public.statEmpty");
   const d = new Date(iso);
-  return `${d.getFullYear()}년 ${d.getMonth() + 1}월`;
+  return t(locale, "profile.public.joinedFormat", {
+    year: d.getFullYear(),
+    month: d.getMonth() + 1,
+  });
 }

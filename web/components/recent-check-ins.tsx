@@ -2,6 +2,8 @@ import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import { MyCheckInRow } from "@/components/my-check-in-row";
 import type { CheckInFormInitial } from "@/components/check-in-form";
+import { getLocale, type Locale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
 type CheckInRow = {
   id: string;
@@ -36,6 +38,7 @@ export async function RecentCheckIns({
   productId: string;
   currentUserId?: string;
 }) {
+  const locale = await getLocale();
   const sb = await supabaseServer();
 
   const { data: checkIns } = await sb
@@ -63,7 +66,9 @@ export async function RecentCheckIns({
   return (
     <section>
       <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-        체크인 ({checkIns.length})
+        {t(locale, "checkIn.list.h2Pre")}
+        {checkIns.length}
+        {t(locale, "checkIn.list.h2Post")}
       </h2>
       <ul className="space-y-5">
         {(checkIns as CheckInRow[]).map((c) => {
@@ -88,13 +93,15 @@ export async function RecentCheckIns({
                 productId={productId}
                 checkIn={initial}
                 createdAt={c.created_at}
+                locale={locale}
               />
             );
           }
 
           const p = profileMap.get(c.user_id);
           const handle = p?.username;
-          const name = p?.display_name ?? handle ?? "익명";
+          const name =
+            p?.display_name ?? handle ?? t(locale, "checkIn.list.anonymous");
 
           return (
             <li
@@ -103,7 +110,7 @@ export async function RecentCheckIns({
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm">
-                  <Stars n={c.rating} />
+                  <Stars n={c.rating} locale={locale} />
                   {handle ? (
                     <Link
                       href={`/u/${handle}`}
@@ -116,7 +123,7 @@ export async function RecentCheckIns({
                   )}
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  {formatRelative(c.drank_at ?? c.created_at)}
+                  {formatRelative(c.drank_at ?? c.created_at, locale)}
                 </span>
               </div>
               {c.pairing && (
@@ -137,27 +144,34 @@ export async function RecentCheckIns({
   );
 }
 
-function Stars({ n }: { n: number }) {
+function Stars({ n, locale }: { n: number; locale: Locale }) {
   return (
-    <span aria-label={`${n}점`} className="text-base leading-none">
+    <span
+      aria-label={t(locale, "checkIn.list.starsAria", { n })}
+      className="text-base leading-none"
+    >
       <span className="text-primary">{"★".repeat(n)}</span>
       <span className="text-foreground/15">{"★".repeat(5 - n)}</span>
     </span>
   );
 }
 
-function formatRelative(iso: string): string {
+function formatRelative(iso: string, locale: Locale): string {
   const then = new Date(iso).getTime();
   const now = Date.now();
   const diffSec = Math.max(0, Math.floor((now - then) / 1000));
-  if (diffSec < 60) return "방금";
+  if (diffSec < 60) return t(locale, "checkIn.list.relativeNow");
   const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `${diffMin}분 전`;
+  if (diffMin < 60)
+    return `${diffMin}${t(locale, "checkIn.list.relativeMinutesSuffix")}`;
   const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour}시간 전`;
+  if (diffHour < 24)
+    return `${diffHour}${t(locale, "checkIn.list.relativeHoursSuffix")}`;
   const diffDay = Math.floor(diffHour / 24);
-  if (diffDay < 30) return `${diffDay}일 전`;
+  if (diffDay < 30)
+    return `${diffDay}${t(locale, "checkIn.list.relativeDaysSuffix")}`;
   const diffMonth = Math.floor(diffDay / 30);
-  if (diffMonth < 12) return `${diffMonth}달 전`;
-  return `${Math.floor(diffMonth / 12)}년 전`;
+  if (diffMonth < 12)
+    return `${diffMonth}${t(locale, "checkIn.list.relativeMonthsSuffix")}`;
+  return `${Math.floor(diffMonth / 12)}${t(locale, "checkIn.list.relativeYearsSuffix")}`;
 }

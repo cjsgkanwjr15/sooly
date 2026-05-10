@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { CheckInForm, type CheckInFormInitial } from "@/components/check-in-form";
 import { deleteCheckIn } from "@/app/actions/check-in";
+import { t } from "@/lib/i18n";
+import type { Locale } from "@/lib/locale";
 
 /**
  * RecentCheckIns 의 본인 체크인 row.
@@ -16,10 +18,12 @@ export function MyCheckInRow({
   productId,
   checkIn,
   createdAt,
+  locale,
 }: {
   productId: string;
   checkIn: CheckInFormInitial;
   createdAt: string;
+  locale: Locale;
 }) {
   const [editing, setEditing] = useState(false);
 
@@ -32,6 +36,7 @@ export function MyCheckInRow({
           onCancel={() => setEditing(false)}
           onSuccess={() => setEditing(false)}
           compact
+          locale={locale}
         />
       </li>
     );
@@ -41,25 +46,27 @@ export function MyCheckInRow({
     <li className="border-b border-border/40 pb-5 last:border-0">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm">
-          <Stars n={checkIn.rating} />
-          <span className="font-medium text-primary">당신</span>
+          <Stars n={checkIn.rating} locale={locale} />
+          <span className="font-medium text-primary">
+            {t(locale, "checkIn.list.youLabel")}
+          </span>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground">
-            {formatRelative(checkIn.drank_at ?? createdAt)}
+            {formatRelative(checkIn.drank_at ?? createdAt, locale)}
           </span>
           <button
             type="button"
             onClick={() => setEditing(true)}
             className="text-xs text-muted-foreground/80 underline-offset-4 hover:text-foreground hover:underline"
-            aria-label="이 체크인 수정"
+            aria-label={t(locale, "checkIn.list.editAria")}
           >
-            수정
+            {t(locale, "checkIn.list.editButton")}
           </button>
           <form action={deleteCheckIn} className="inline">
             <input type="hidden" name="id" value={checkIn.id} />
             <input type="hidden" name="product_id" value={productId} />
-            <DeleteButton />
+            <DeleteButton locale={locale} />
           </form>
         </div>
       </div>
@@ -75,41 +82,50 @@ export function MyCheckInRow({
   );
 }
 
-function DeleteButton() {
+function DeleteButton({ locale }: { locale: Locale }) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
       disabled={pending}
       className="text-xs text-muted-foreground/70 underline-offset-4 hover:text-destructive hover:underline disabled:opacity-50"
-      aria-label="이 체크인 삭제"
+      aria-label={t(locale, "checkIn.list.deleteAria")}
     >
-      {pending ? "삭제 중..." : "삭제"}
+      {pending
+        ? t(locale, "checkIn.list.deletePending")
+        : t(locale, "checkIn.list.deleteButton")}
     </button>
   );
 }
 
-function Stars({ n }: { n: number }) {
+function Stars({ n, locale }: { n: number; locale: Locale }) {
   return (
-    <span aria-label={`${n}점`} className="text-base leading-none">
+    <span
+      aria-label={t(locale, "checkIn.list.starsAria", { n })}
+      className="text-base leading-none"
+    >
       <span className="text-primary">{"★".repeat(n)}</span>
       <span className="text-foreground/15">{"★".repeat(5 - n)}</span>
     </span>
   );
 }
 
-function formatRelative(iso: string): string {
+function formatRelative(iso: string, locale: Locale): string {
   const then = new Date(iso).getTime();
   const now = Date.now();
   const diffSec = Math.max(0, Math.floor((now - then) / 1000));
-  if (diffSec < 60) return "방금";
+  if (diffSec < 60) return t(locale, "checkIn.list.relativeNow");
   const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `${diffMin}분 전`;
+  if (diffMin < 60)
+    return `${diffMin}${t(locale, "checkIn.list.relativeMinutesSuffix")}`;
   const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour}시간 전`;
+  if (diffHour < 24)
+    return `${diffHour}${t(locale, "checkIn.list.relativeHoursSuffix")}`;
   const diffDay = Math.floor(diffHour / 24);
-  if (diffDay < 30) return `${diffDay}일 전`;
+  if (diffDay < 30)
+    return `${diffDay}${t(locale, "checkIn.list.relativeDaysSuffix")}`;
   const diffMonth = Math.floor(diffDay / 30);
-  if (diffMonth < 12) return `${diffMonth}달 전`;
-  return `${Math.floor(diffMonth / 12)}년 전`;
+  if (diffMonth < 12)
+    return `${diffMonth}${t(locale, "checkIn.list.relativeMonthsSuffix")}`;
+  return `${Math.floor(diffMonth / 12)}${t(locale, "checkIn.list.relativeYearsSuffix")}`;
 }

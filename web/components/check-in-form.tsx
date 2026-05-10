@@ -3,14 +3,16 @@
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { createCheckIn, updateCheckIn } from "@/app/actions/check-in";
+import { t, tTaste } from "@/lib/i18n";
+import type { Locale } from "@/lib/locale";
 
 const TASTE_AXES = [
-  { key: "taste_sweet", label: "단맛" },
-  { key: "taste_sour", label: "산미" },
-  { key: "taste_bitter", label: "쓴맛" },
-  { key: "taste_umami", label: "감칠맛" },
-  { key: "taste_aroma", label: "향" },
-  { key: "taste_finish", label: "목넘김" },
+  { key: "taste_sweet", koLabel: "단맛" },
+  { key: "taste_sour", koLabel: "산미" },
+  { key: "taste_bitter", koLabel: "쓴맛" },
+  { key: "taste_umami", koLabel: "감칠맛" },
+  { key: "taste_aroma", koLabel: "향" },
+  { key: "taste_finish", koLabel: "목넘김" },
 ] as const;
 
 type TasteKey = (typeof TASTE_AXES)[number]["key"];
@@ -61,6 +63,8 @@ function tasteFromInitial(init?: CheckInFormInitial): TasteState {
  *
  * onSuccess: 저장 성공 후 호출 (수정 모드에서 인라인 폼 닫기에 사용).
  * onCancel: 사용자가 취소 누르면 호출 (수정 모드 only).
+ *
+ * Client component 라 locale 은 부모 (server) 에서 prop drilling.
  */
 export function CheckInForm({
   productId,
@@ -68,12 +72,14 @@ export function CheckInForm({
   onCancel,
   onSuccess,
   compact = false,
+  locale,
 }: {
   productId: string;
   initial?: CheckInFormInitial;
   onCancel?: () => void;
   onSuccess?: () => void;
   compact?: boolean;
+  locale: Locale;
 }) {
   const isEdit = !!initial;
   const [rating, setRating] = useState(initial?.rating ?? 0);
@@ -104,7 +110,10 @@ export function CheckInForm({
       {/* 별점 */}
       <div>
         <div className="text-xs uppercase tracking-wider text-muted-foreground">
-          별점 <span className="text-destructive/80">*</span>
+          {t(locale, "checkIn.ratingLabel")}{" "}
+          <span className="text-destructive/80">
+            {t(locale, "checkIn.ratingRequired")}
+          </span>
         </div>
         <div
           className="mt-2 flex items-center gap-1"
@@ -116,7 +125,7 @@ export function CheckInForm({
               type="button"
               onClick={() => setRating(n)}
               onMouseEnter={() => setHover(n)}
-              aria-label={`${n}점`}
+              aria-label={t(locale, "checkIn.ratingButtonAria", { n })}
               aria-pressed={rating === n}
               className="text-2xl leading-none transition-transform hover:scale-110"
             >
@@ -131,11 +140,11 @@ export function CheckInForm({
           ))}
           {rating > 0 ? (
             <span className="ml-2 text-sm text-muted-foreground">
-              {rating}점
+              {t(locale, "checkIn.ratingSelected", { n: rating })}
             </span>
           ) : (
             <span className="ml-2 text-xs text-muted-foreground/80">
-              별 1~5개를 눌러주세요
+              {t(locale, "checkIn.ratingHint")}
             </span>
           )}
         </div>
@@ -147,7 +156,10 @@ export function CheckInForm({
           htmlFor={`checkin-pairing-${initial?.id ?? "new"}`}
           className="text-xs uppercase tracking-wider text-muted-foreground"
         >
-          함께 한 음식 <span className="text-muted-foreground/60">(선택)</span>
+          {t(locale, "checkIn.pairingLabel")}{" "}
+          <span className="text-muted-foreground/60">
+            ({t(locale, "common.optional")})
+          </span>
         </label>
         <input
           id={`checkin-pairing-${initial?.id ?? "new"}`}
@@ -155,7 +167,7 @@ export function CheckInForm({
           type="text"
           maxLength={120}
           defaultValue={initial?.pairing ?? ""}
-          placeholder="감자전, 보쌈, 회…"
+          placeholder={t(locale, "checkIn.pairingPlaceholder")}
           className="mt-1.5 block w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         />
       </div>
@@ -166,7 +178,10 @@ export function CheckInForm({
           htmlFor={`checkin-note-${initial?.id ?? "new"}`}
           className="text-xs uppercase tracking-wider text-muted-foreground"
         >
-          한 줄 메모 <span className="text-muted-foreground/60">(선택)</span>
+          {t(locale, "checkIn.noteLabel")}{" "}
+          <span className="text-muted-foreground/60">
+            ({t(locale, "common.optional")})
+          </span>
         </label>
         <textarea
           id={`checkin-note-${initial?.id ?? "new"}`}
@@ -174,7 +189,7 @@ export function CheckInForm({
           maxLength={500}
           rows={2}
           defaultValue={initial?.note ?? ""}
-          placeholder="어떤 맛이었나요? 누구랑 마셨나요?"
+          placeholder={t(locale, "checkIn.notePlaceholder")}
           className="mt-1.5 w-full resize-y rounded-lg border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         />
       </div>
@@ -185,7 +200,7 @@ export function CheckInForm({
           htmlFor={`checkin-date-${initial?.id ?? "new"}`}
           className="text-xs uppercase tracking-wider text-muted-foreground"
         >
-          마신 날
+          {t(locale, "checkIn.drankAtLabel")}
         </label>
         <input
           id={`checkin-date-${initial?.id ?? "new"}`}
@@ -201,28 +216,37 @@ export function CheckInForm({
       <div className="rounded-lg border border-border/50 p-4">
         <div className="flex items-center justify-between">
           <div className="text-xs uppercase tracking-wider text-muted-foreground">
-            맛 프로필 <span className="text-muted-foreground/60">(선택)</span>
+            {t(locale, "checkIn.tasteLabel")}{" "}
+            <span className="text-muted-foreground/60">
+              ({t(locale, "common.optional")})
+            </span>
           </div>
           <button
             type="button"
             onClick={() => setTaste(EMPTY_TASTE)}
             className="text-[11px] text-muted-foreground/70 underline-offset-4 hover:text-foreground hover:underline"
           >
-            모두 지우기
+            {t(locale, "checkIn.tasteClearAll")}
           </button>
         </div>
         <p className="mt-1 text-[11px] text-muted-foreground/80">
-          이 술의 맛을 1~5 로 평가해보세요. 다른 사람들의 평가와 합쳐져 육각형
-          차트로 표시됩니다.
+          {t(locale, "checkIn.tasteHint")}
         </p>
-        <div className={compact ? "mt-3 grid grid-cols-1 gap-2" : "mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2"}>
-          {TASTE_AXES.map(({ key, label }) => (
+        <div
+          className={
+            compact
+              ? "mt-3 grid grid-cols-1 gap-2"
+              : "mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2"
+          }
+        >
+          {TASTE_AXES.map(({ key, koLabel }) => (
             <TasteRow
               key={key}
               name={key}
-              label={label}
+              label={tTaste(locale, koLabel)}
               value={taste[key]}
               onChange={(v) => setTaste((s) => ({ ...s, [key]: v }))}
+              locale={locale}
             />
           ))}
         </div>
@@ -230,14 +254,14 @@ export function CheckInForm({
 
       {/* 액션 버튼 */}
       <div className="flex flex-wrap items-center gap-3">
-        <SubmitButton disabled={rating === 0} isEdit={isEdit} />
+        <SubmitButton disabled={rating === 0} isEdit={isEdit} locale={locale} />
         {isEdit && onCancel && (
           <button
             type="button"
             onClick={onCancel}
             className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
           >
-            취소
+            {t(locale, "checkIn.cancel")}
           </button>
         )}
       </div>
@@ -250,11 +274,13 @@ function TasteRow({
   label,
   value,
   onChange,
+  locale,
 }: {
   name: TasteKey;
   label: string;
   value: number;
   onChange: (v: number) => void;
+  locale: Locale;
 }) {
   return (
     <div className="flex items-center justify-between gap-3">
@@ -268,7 +294,7 @@ function TasteRow({
               key={n}
               type="button"
               onClick={() => onChange(value === n ? 0 : n)}
-              aria-label={`${label} ${n}점`}
+              aria-label={t(locale, "checkIn.tasteAxisAria", { label, n })}
               aria-pressed={value === n}
               className={
                 "h-3 w-3 rounded-full border transition-colors " +
@@ -287,18 +313,20 @@ function TasteRow({
 function SubmitButton({
   disabled,
   isEdit,
+  locale,
 }: {
   disabled: boolean;
   isEdit: boolean;
+  locale: Locale;
 }) {
   const { pending } = useFormStatus();
   const label = pending
     ? isEdit
-      ? "저장 중..."
-      : "기록 중..."
+      ? t(locale, "checkIn.submitEditing")
+      : t(locale, "checkIn.submitCreating")
     : isEdit
-      ? "저장"
-      : "🍶 체크인 남기기";
+      ? t(locale, "checkIn.submitEdit")
+      : t(locale, "checkIn.submitCreate");
   return (
     <button
       type="submit"

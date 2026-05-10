@@ -48,7 +48,7 @@ export async function SiteHeader() {
         </nav>
 
         <div className="ml-auto flex items-center gap-3">
-          <SearchBar />
+          <SearchBar locale={locale} />
           <LocaleToggle current={locale} />
           {user ? (
             <UserMenu

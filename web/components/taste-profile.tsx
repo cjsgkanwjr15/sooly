@@ -2,7 +2,11 @@
  * 맛 프로필 레이더 차트 (hexagon).
  * 6개 축: 단맛·산미·쓴맛·감칠맛·향·목넘김 (0~5)
  * 데이터 없으면 empty state.
+ *
+ * Locale 이 명시되지 않아도 SSR 에서 자동 fetch (server component).
  */
+import { tTaste, t } from "@/lib/i18n";
+import { getLocale, type Locale } from "@/lib/locale";
 
 export type TasteProfile = {
   단맛?: number;
@@ -16,13 +20,26 @@ export type TasteProfile = {
 type Props = {
   profile?: TasteProfile | null;
   className?: string;
+  /** 부모가 이미 locale 을 가지고 있다면 prop 으로. 없으면 내부에서 fetch. */
+  locale?: Locale;
 };
 
 const AXES: Array<keyof TasteProfile> = [
-  "단맛", "산미", "쓴맛", "감칠맛", "향", "목넘김",
+  "단맛",
+  "산미",
+  "쓴맛",
+  "감칠맛",
+  "향",
+  "목넘김",
 ];
 
-export function TasteRadar({ profile, className = "" }: Props) {
+export async function TasteRadar({
+  profile,
+  className = "",
+  locale: localeProp,
+}: Props) {
+  const locale = localeProp ?? (await getLocale());
+
   const hasData =
     profile && AXES.some((k) => typeof profile[k] === "number" && profile[k]! > 0);
 
@@ -102,7 +119,7 @@ export function TasteRadar({ profile, className = "" }: Props) {
               dominantBaseline="central"
               className="fill-muted-foreground font-sans text-[10px]"
             >
-              {axis}
+              {tTaste(locale, axis)}
             </text>
           );
         })}
@@ -112,7 +129,7 @@ export function TasteRadar({ profile, className = "" }: Props) {
         <div className="absolute inset-0 flex items-center justify-center">
           <p className="text-center text-sm text-muted-foreground">
             <span className="block font-serif text-lg text-foreground/70">?</span>
-            <span className="mt-1 block">맛 프로필은 체크인 누적 후 표시됩니다</span>
+            <span className="mt-1 block">{t(locale, "tasteRadar.emptyHint")}</span>
           </p>
         </div>
       )}

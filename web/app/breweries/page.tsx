@@ -4,17 +4,23 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { BreweriesFilter } from "@/components/breweries-filter";
 import { Pagination } from "@/components/pagination";
 import { sanitizeSearch } from "@/lib/search";
+import { getLocale, pick } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
-export const metadata: Metadata = {
-  title: "양조장",
-  description: "한국 전통주 양조장 431곳을 지역별로 둘러보세요.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return {
+    title: t(locale, "breweriesList.metaTitle"),
+    description: t(locale, "breweriesList.metaDescription"),
+  };
+}
 
 type SearchParams = { region?: string; q?: string; page?: string };
 
 type BreweryListItem = {
   id: string;
   name_ko: string;
+  name_en: string | null;
   region: string | null;
   address: string | null;
   is_visiting_brewery: boolean | null;
@@ -33,6 +39,7 @@ export default async function BreweriesPage({
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
+  const locale = await getLocale();
   const sb = await supabaseServer();
 
   // 전체 region 목록 (필터 옵션용)
@@ -44,7 +51,9 @@ export default async function BreweriesPage({
 
   let query = sb
     .from("breweries")
-    .select("id, name_ko, region, address, is_visiting_brewery", { count: "exact" })
+    .select("id, name_ko, name_en, region, address, is_visiting_brewery", {
+      count: "exact",
+    })
     .order("name_ko", { ascending: true })
     .range(from, to);
 
@@ -75,6 +84,7 @@ export default async function BreweriesPage({
   const list = breweries ?? [];
   const total = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const isFiltered = Boolean(q || region);
 
   function hrefForPage(p: number): string {
     const next = new URLSearchParams();
@@ -89,37 +99,51 @@ export default async function BreweriesPage({
     <main className="mx-auto max-w-6xl px-6 py-10">
       <header className="mb-6">
         <h1 className="font-serif text-3xl font-semibold tracking-tight">
-          양조장
+          {t(locale, "breweriesList.h1")}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {q || region ? (
+          {isFiltered ? (
             <>
-              결과 <strong className="text-foreground">{total}</strong>곳
+              {t(locale, "breweriesList.searchSummaryPre")}
+              <strong className="text-foreground">{total}</strong>
+              {t(locale, "breweriesList.searchSummarySuffix")}
               {q && <> · "{q}"</>}
               {region && <> · {region}</>}
             </>
           ) : (
-            <>총 <strong className="text-foreground">{total}</strong>개 양조장</>
+            <>
+              {t(locale, "breweriesList.totalSummaryPre")}
+              <strong className="text-foreground">{total}</strong>
+              {t(locale, "breweriesList.totalSummarySuffix")}
+            </>
           )}
           {totalPages > 1 && (
-            <span> · {page}/{totalPages} 페이지</span>
+            <span>
+              {" · "}
+              {t(locale, "breweriesList.pageInfo", { page, total: totalPages })}
+            </span>
           )}
         </p>
       </header>
 
-      <BreweriesFilter regions={regions} />
+      <BreweriesFilter regions={regions} locale={locale} />
 
-      {error && <p className="mt-6 text-red-600">DB 조회 실패: {error.message}</p>}
+      {error && (
+        <p className="mt-6 text-red-600">
+          {t(locale, "breweriesList.error", { message: error.message })}
+        </p>
+      )}
 
       {list.length === 0 && !error && (
         <p className="mt-16 text-center text-muted-foreground">
-          조건에 맞는 양조장이 없습니다.
+          {t(locale, "breweriesList.empty")}
         </p>
       )}
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {list.map((b) => {
           const productCount = countMap.get(b.id) ?? 0;
+          const breweryName = pick(locale, b.name_ko, b.name_en) ?? b.name_ko;
           return (
             <Link
               key={b.id}
@@ -128,11 +152,11 @@ export default async function BreweriesPage({
             >
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-serif text-lg font-medium leading-tight group-hover:underline">
-                  {b.name_ko}
+                  {breweryName}
                 </h3>
                 {b.is_visiting_brewery && (
                   <span className="shrink-0 rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-[10px] text-primary">
-                    찾아가는
+                    {t(locale, "breweriesList.visitingBadge")}
                   </span>
                 )}
               </div>
@@ -140,7 +164,8 @@ export default async function BreweriesPage({
                 <div className="mt-1 text-sm text-muted-foreground">{b.region}</div>
               )}
               <div className="mt-auto pt-3 text-xs text-muted-foreground">
-                제품 <span className="text-foreground">{productCount}</span>개
+                {productCount}
+                {t(locale, "breweriesList.productsCountSuffix")}
               </div>
             </Link>
           );

@@ -2,17 +2,22 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { t, tCategory } from "@/lib/i18n";
+import type { Locale } from "@/lib/locale";
 
 type Props = {
   categories: string[];
   regions: string[];
+  locale: Locale;
 };
 
 /**
  * URL param 기반 필터 UI. 클릭 → 해당 필터 적용된 URL 로 이동.
  * 이미 선택된 필터를 다시 클릭하면 해제.
+ *
+ * Client component 라 locale 은 부모 (server) 에서 prop drilling.
  */
-export function ProductFilters({ categories, regions }: Props) {
+export function ProductFilters({ categories, regions, locale }: Props) {
   const pathname = usePathname();
   const params = useSearchParams();
   const activeCategory = params.get("category");
@@ -40,17 +45,29 @@ export function ProductFilters({ categories, regions }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 text-xs font-medium text-muted-foreground">카테고리</span>
+        <span className="mr-1 text-xs font-medium text-muted-foreground">
+          {t(locale, "filters.category")}
+        </span>
         {categories.map((c) => (
-          <Link key={c} href={hrefFor("category", c)} className={chipClass(activeCategory === c)}>
-            {c}
+          <Link
+            key={c}
+            href={hrefFor("category", c)}
+            className={chipClass(activeCategory === c)}
+          >
+            {tCategory(locale, c)}
           </Link>
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 text-xs font-medium text-muted-foreground">지역</span>
+        <span className="mr-1 text-xs font-medium text-muted-foreground">
+          {t(locale, "filters.region")}
+        </span>
         {regions.map((r) => (
-          <Link key={r} href={hrefFor("region", r)} className={chipClass(activeRegion === r)}>
+          <Link
+            key={r}
+            href={hrefFor("region", r)}
+            className={chipClass(activeRegion === r)}
+          >
             {r}
           </Link>
         ))}
@@ -61,7 +78,7 @@ export function ProductFilters({ categories, regions }: Props) {
             href={pathname}
             className="text-xs text-muted-foreground underline-offset-2 hover:underline"
           >
-            필터 모두 해제
+            {t(locale, "filters.clearAll")}
           </Link>
         </div>
       )}

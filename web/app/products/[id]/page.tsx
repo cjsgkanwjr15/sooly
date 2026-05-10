@@ -11,6 +11,7 @@ import { RecentCheckIns } from "@/components/recent-check-ins";
 import { JsonLd } from "@/components/json-ld";
 import { env } from "@/lib/env";
 import { getLocale, pick } from "@/lib/locale";
+import { t, tCategory } from "@/lib/i18n";
 import type { Metadata } from "next";
 
 export const revalidate = 600;
@@ -63,12 +64,20 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
+  const locale = await getLocale();
   const product = await getProduct(id);
-  if (!product) return { title: "제품 없음" };
-  const brewery = Array.isArray(product.breweries) ? product.breweries[0] : product.breweries;
+  if (!product) return { title: t(locale, "productDetail.notFound") };
+  const brewery = Array.isArray(product.breweries)
+    ? product.breweries[0]
+    : product.breweries;
+  const productName = pick(locale, product.name_ko, product.name_en) ?? product.name_ko;
+  const breweryName = brewery
+    ? (pick(locale, brewery.name_ko, brewery.name_en) ?? brewery.name_ko)
+    : "";
+  const category = product.category ? tCategory(locale, product.category) : "";
   return {
-    title: product.name_ko,
-    description: `${brewery?.name_ko ?? ""} ${product.name_ko} · ${product.category ?? ""} ${product.abv ?? ""}% ${product.volume_ml ?? ""}ml`,
+    title: productName,
+    description: `${breweryName} ${productName} · ${category} ${product.abv ?? ""}% ${product.volume_ml ?? ""}ml`.trim(),
   };
 }
 
@@ -212,7 +221,9 @@ export default async function ProductDetailPage({
       <JsonLd data={productJsonLd} />
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-muted-foreground">
-        <Link href="/products" className="hover:text-foreground">제품</Link>
+        <Link href="/products" className="hover:text-foreground">
+          {t(locale, "productDetail.crumbProducts")}
+        </Link>
         {product.category && (
           <>
             {" · "}
@@ -220,7 +231,7 @@ export default async function ProductDetailPage({
               href={`/categories/${encodeURIComponent(product.category)}`}
               className="hover:text-foreground"
             >
-              {product.category}
+              {tCategory(locale, product.category)}
             </Link>
           </>
         )}
@@ -248,7 +259,7 @@ export default async function ProductDetailPage({
         <div className="flex flex-col">
           {product.category && (
             <div className="text-xs uppercase tracking-[0.25em] text-primary/80">
-              {product.category}
+              {tCategory(locale, product.category)}
             </div>
           )}
           <h1 className="mt-3 font-serif text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
@@ -280,10 +291,34 @@ export default async function ProductDetailPage({
           </div>
 
           <dl className="mt-6 grid grid-cols-2 gap-x-8 gap-y-4 border-y py-5 sm:grid-cols-4 sm:border-y-0 sm:border-t sm:pb-0">
-            <Stat label="도수" value={product.abv != null ? `${product.abv}%` : "—"} />
-            <Stat label="용량" value={product.volume_ml != null ? `${product.volume_ml}ml` : "—"} />
-            <Stat label="카테고리" value={product.category ?? "—"} />
-            <Stat label="지역" value={brewery?.region ?? "—"} />
+            <Stat
+              label={t(locale, "productDetail.statAbv")}
+              value={
+                product.abv != null
+                  ? `${product.abv}%`
+                  : t(locale, "productDetail.statEmpty")
+              }
+            />
+            <Stat
+              label={t(locale, "productDetail.statVolume")}
+              value={
+                product.volume_ml != null
+                  ? `${product.volume_ml}ml`
+                  : t(locale, "productDetail.statEmpty")
+              }
+            />
+            <Stat
+              label={t(locale, "productDetail.statCategory")}
+              value={
+                product.category
+                  ? tCategory(locale, product.category)
+                  : t(locale, "productDetail.statEmpty")
+              }
+            />
+            <Stat
+              label={t(locale, "productDetail.statRegion")}
+              value={brewery?.region ?? t(locale, "productDetail.statEmpty")}
+            />
           </dl>
 
           <div className="mt-8">
@@ -295,22 +330,20 @@ export default async function ProductDetailPage({
       {/* 맛 프로필 + 본문 섹션들 */}
       <div className="mt-16 grid gap-12 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="space-y-12">
-          <Section title={locale === "en" ? "Tasting notes" : "맛 노트"}>
+          <Section title={t(locale, "productDetail.tastingNotesH2")}>
             {tastingNotes ? (
               <p className="whitespace-pre-line text-[1.0625rem] leading-[1.8]">
                 {tastingNotes}
               </p>
             ) : (
               <p className="text-sm italic text-muted-foreground">
-                {locale === "en"
-                  ? "Curated tasting notes coming soon."
-                  : "큐레이팅된 맛 노트가 곧 제공됩니다."}
+                {t(locale, "productDetail.tastingNotesEmpty")}
               </p>
             )}
           </Section>
 
           {product.ingredients && product.ingredients.length > 0 && (
-            <Section title="원재료">
+            <Section title={t(locale, "productDetail.ingredientsH2")}>
               <div className="flex flex-wrap gap-2">
                 {product.ingredients.map((ing) => (
                   <Badge key={ing} variant="outline" className="font-normal">
@@ -322,7 +355,7 @@ export default async function ProductDetailPage({
           )}
 
           {product.pairing_suggestions && product.pairing_suggestions.length > 0 && (
-            <Section title="어울리는 음식">
+            <Section title={t(locale, "productDetail.pairingsH2")}>
               <ul className="space-y-2 text-[1rem] leading-relaxed">
                 {product.pairing_suggestions.map((p, i) => (
                   <li key={i} className="flex gap-3">
@@ -334,13 +367,11 @@ export default async function ProductDetailPage({
             </Section>
           )}
 
-          {brewery && breweryStory && (
+          {brewery && breweryStory && breweryName && (
             <Section
-              title={
-                locale === "en"
-                  ? `About ${breweryName}`
-                  : `${breweryName} 이야기`
-              }
+              title={t(locale, "productDetail.breweryStoryH2", {
+                brewery: breweryName,
+              })}
             >
               <blockquote className="border-l-2 border-primary/30 pl-5 italic leading-relaxed text-muted-foreground">
                 {breweryStory}
@@ -349,7 +380,7 @@ export default async function ProductDetailPage({
                 href={`/breweries/${brewery.id}`}
                 className="mt-4 inline-block text-sm underline underline-offset-4 hover:text-primary"
               >
-                {locale === "en" ? "Learn more about the brewery →" : "양조장 자세히 보기 →"}
+                {t(locale, "productDetail.breweryStoryMore")}
               </Link>
             </Section>
           )}
@@ -363,20 +394,19 @@ export default async function ProductDetailPage({
         <aside className="space-y-8">
           <div className="rounded-xl border bg-card p-6">
             <h3 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-              맛 프로필
+              {t(locale, "productDetail.tasteProfileH3")}
             </h3>
             <TasteRadar
               profile={hasTasteData ? tasteProfile : null}
               className="aspect-square"
+              locale={locale}
             />
           </div>
 
           {sameBrewery.length > 0 && brewery && breweryName && (
             <div className="rounded-xl border bg-card p-6">
               <h3 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                {locale === "en"
-                  ? `More from ${breweryName}`
-                  : `${breweryName} 의 다른 제품`}
+                {t(locale, "productDetail.sameBreweryH3", { brewery: breweryName })}
               </h3>
               <ul className="space-y-3">
                 {sameBrewery.map((r) => {
@@ -389,7 +419,7 @@ export default async function ProductDetailPage({
                       >
                         <div className="font-medium group-hover:underline">{rName}</div>
                         <div className="text-xs text-muted-foreground">
-                          {r.category}
+                          {r.category && tCategory(locale, r.category)}
                           {r.abv != null && ` · ${r.abv}%`}
                         </div>
                       </Link>
@@ -403,22 +433,24 @@ export default async function ProductDetailPage({
       </div>
 
       {/* You might also like */}
-      {similar.length > 0 && (
+      {similar.length > 0 && product.category && (
         <section className="mt-20">
           <div className="mb-6 flex items-end justify-between">
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                You might also like
+                {t(locale, "productDetail.similarSubtitle")}
               </p>
               <h2 className="mt-1 font-serif text-2xl font-semibold tracking-tight">
-                비슷한 {product.category}
+                {t(locale, "productDetail.similarH2", {
+                  category: tCategory(locale, product.category),
+                })}
               </h2>
             </div>
             <Link
-              href={`/categories/${encodeURIComponent(product.category ?? "")}`}
+              href={`/categories/${encodeURIComponent(product.category)}`}
               className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             >
-              더 보기 →
+              {t(locale, "productDetail.similarMore")}
             </Link>
           </div>
 
@@ -452,14 +484,14 @@ export default async function ProductDetailPage({
 
       {product.source_url && (
         <div className="mt-16 border-t pt-6 text-xs text-muted-foreground">
-          원본 출처:{" "}
+          {t(locale, "productDetail.sourceLabel")}{" "}
           <a
             href={product.source_url}
             target="_blank"
             rel="noopener noreferrer"
             className="underline underline-offset-2"
           >
-            더술닷컴
+            {t(locale, "productDetail.sourceLinkText")}
           </a>
         </div>
       )}

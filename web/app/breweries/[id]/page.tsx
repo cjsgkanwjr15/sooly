@@ -7,6 +7,7 @@ import { JsonLd } from "@/components/json-ld";
 import { Stars } from "@/components/rating-display";
 import { env } from "@/lib/env";
 import { getLocale, pick } from "@/lib/locale";
+import { t, tCategory } from "@/lib/i18n";
 import type { Metadata } from "next";
 
 export const revalidate = 600;
@@ -57,11 +58,17 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
+  const locale = await getLocale();
   const brewery = await getBrewery(id);
-  if (!brewery) return { title: "양조장 없음" };
+  if (!brewery) return { title: t(locale, "breweryDetail.notFound") };
+  const breweryName =
+    pick(locale, brewery.name_ko, brewery.name_en) ?? brewery.name_ko;
   return {
-    title: brewery.name_ko,
-    description: `${brewery.region ?? ""} ${brewery.name_ko} 양조장 — 제품·스토리·위치 정보`,
+    title: breweryName,
+    description: t(locale, "breweryDetail.metaDescription", {
+      region: brewery.region ?? "",
+      name: breweryName,
+    }),
   };
 }
 
@@ -162,7 +169,9 @@ export default async function BreweryDetailPage({
     <main className="mx-auto max-w-4xl px-6 py-10">
       <JsonLd data={breweryJsonLd} />
       <nav className="mb-8 text-sm text-muted-foreground">
-        <Link href="/products" className="hover:text-foreground">제품</Link>
+        <Link href="/products" className="hover:text-foreground">
+          {t(locale, "breweryDetail.crumbProducts")}
+        </Link>
         {brewery.region && (
           <>
             {" "}·{" "}
@@ -178,14 +187,14 @@ export default async function BreweryDetailPage({
 
       <PhotoPlaceholder
         src={null}
-        alt={`${breweryName} 양조장 전경`}
+        alt={breweryName}
         aspectRatio="16/9"
         className="mb-8"
       />
 
       <header className="mb-10">
         <div className="mb-3 text-xs uppercase tracking-widest text-primary/80">
-          {locale === "en" ? "Brewery" : "양조장"}
+          {t(locale, "breweryDetail.breweryUppercase")}
         </div>
         <h1 className="font-serif text-4xl font-semibold tracking-tight sm:text-5xl">
           {breweryName}
@@ -197,14 +206,14 @@ export default async function BreweryDetailPage({
           {brewery.region && <span>{brewery.region}</span>}
           {brewery.founded_year && (
             <span>
-              {locale === "en"
-                ? `Founded ${brewery.founded_year}`
-                : `설립 ${brewery.founded_year}년`}
+              {t(locale, "breweryDetail.foundedYearLabel", {
+                year: brewery.founded_year,
+              })}
             </span>
           )}
           {brewery.is_visiting_brewery && (
             <span className="rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-xs text-primary">
-              {locale === "en" ? "Visiting brewery" : "찾아가는 양조장"}
+              {t(locale, "breweryDetail.visitingBadge")}
             </span>
           )}
         </div>
@@ -213,7 +222,7 @@ export default async function BreweryDetailPage({
       {brewery.address && (
         <section className="mb-10">
           <h2 className="mb-2 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            주소
+            {t(locale, "breweryDetail.addressH2")}
           </h2>
           <p className="text-sm">{brewery.address}</p>
         </section>
@@ -222,7 +231,7 @@ export default async function BreweryDetailPage({
       {(brewery.website || brewery.instagram) && (
         <section className="mb-10">
           <h2 className="mb-2 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            링크
+            {t(locale, "breweryDetail.linksH2")}
           </h2>
           <ul className="space-y-1 text-sm">
             {brewery.website && (
@@ -256,7 +265,7 @@ export default async function BreweryDetailPage({
       {breweryStory ? (
         <section className="mb-10">
           <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            {locale === "en" ? "Story" : "이야기"}
+            {t(locale, "breweryDetail.storyH2")}
           </h2>
           <p className="whitespace-pre-line leading-relaxed text-muted-foreground">
             {breweryStory}
@@ -265,20 +274,16 @@ export default async function BreweryDetailPage({
       ) : (
         <section className="mb-10 rounded-xl border border-dashed border-border bg-card/40 p-6">
           <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            {locale === "en" ? "Story" : "이야기"}
+            {t(locale, "breweryDetail.storyEmptyTitle")}
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            {locale === "en"
-              ? `The story, photos, and details for ${breweryName} are still being gathered. If you're from this brewery, you can help fill this page in.`
-              : `${breweryName} 의 이야기·사진·세부 정보는 아직 채워지는 중이에요. 양조장 측에서 직접 등록하시면 빠르게 반영됩니다.`}
+            {t(locale, "breweryDetail.storyEmptyBody", { brewery: breweryName })}
           </p>
           <Link
             href="/for-breweries"
             className="mt-3 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline"
           >
-            {locale === "en"
-              ? "Brewery onboarding →"
-              : "양조장 등록 안내 →"}
+            {t(locale, "breweryDetail.storyEmptyLink")}
           </Link>
         </section>
       )}
@@ -292,12 +297,10 @@ export default async function BreweryDetailPage({
           <div className="mb-5 flex items-end justify-between">
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                {locale === "en"
-                  ? `From ${breweryName}`
-                  : `${breweryName} 의 제품`}
+                {t(locale, "breweryDetail.lineupSubtitle", { brewery: breweryName })}
               </p>
               <h2 className="mt-1 font-serif text-2xl font-semibold tracking-tight">
-                {locale === "en" ? "Lineup" : "라인업"}{" "}
+                {t(locale, "breweryDetail.lineupH2")}{" "}
                 <span className="text-muted-foreground">
                   {productsWithRating.length}
                 </span>
@@ -327,7 +330,7 @@ export default async function BreweryDetailPage({
                         {pName}
                       </h3>
                       <div className="mt-1.5 text-xs text-muted-foreground">
-                        {p.category}
+                        {p.category && tCategory(locale, p.category)}
                         {p.abv != null && ` · ${p.abv}%`}
                         {p.volume_ml != null && ` · ${p.volume_ml}ml`}
                       </div>
@@ -339,16 +342,14 @@ export default async function BreweryDetailPage({
                               {p.avgRating.toFixed(1)}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              {locale === "en"
-                                ? `${p.ratingCount} check-ins`
-                                : `${p.ratingCount}회`}
+                              {t(locale, "breweryDetail.lineupCheckInsCount", {
+                                count: p.ratingCount,
+                              })}
                             </span>
                           </div>
                         ) : (
                           <span className="text-xs text-muted-foreground/70">
-                            {locale === "en"
-                              ? "No check-ins yet"
-                              : "아직 체크인 없음"}
+                            {t(locale, "breweryDetail.lineupNoCheckIns")}
                           </span>
                         )}
                       </div>
@@ -374,10 +375,9 @@ function BreweryOwnerCta({
   locale: "ko" | "en";
   breweryName: string;
 }) {
-  const subject =
-    locale === "en"
-      ? `[Sooly] Brewery onboarding — ${breweryName}`
-      : `[Sooly] 양조장 등록 문의 — ${breweryName}`;
+  const subject = t(locale, "breweryDetail.cta.mailtoSubject", {
+    brewery: breweryName,
+  });
   const mailto = `mailto:soolyhello@gmail.com?subject=${encodeURIComponent(subject)}`;
 
   return (
@@ -387,32 +387,26 @@ function BreweryOwnerCta({
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60 opacity-75" />
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
         </span>
-        {locale === "en"
-          ? "Founding cohort · 5~10 breweries"
-          : "1기 양조장 · 5~10곳 모집 중"}
+        {t(locale, "breweryDetail.cta.pill")}
       </div>
       <h3 className="mt-4 font-serif text-xl font-medium leading-snug">
-        {locale === "en"
-          ? `Are you from ${breweryName}?`
-          : `이 양조장 운영자이신가요?`}
+        {t(locale, "breweryDetail.cta.h3Mine")}
       </h3>
       <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-        {locale === "en"
-          ? "Sooly is recruiting a founding cohort of 5~10 breweries. The official-page badge, story, photos, and check-in replies are free forever; the business tier (analytics & promotion) is co-designed and priced together with the cohort."
-          : "Sooly 는 1기 양조장 5~10곳을 모집해 가격·기능을 함께 정합니다. 공식 ✓ 뱃지·이야기·사진·체크인 답변은 앞으로도 무료, 비즈니스 도구만 1기 양조장과 함께 설계 후 정식 출시됩니다. 1기 합류 시 6개월 무료 + 평생 가격 락인."}
+        {t(locale, "breweryDetail.cta.body")}
       </p>
       <div className="mt-5 flex flex-wrap gap-3">
         <Link
           href="/for-breweries"
           className="rounded-md border border-primary/30 bg-background px-4 py-2 text-sm font-medium transition-colors hover:border-primary/50 hover:bg-primary/5"
         >
-          {locale === "en" ? "Plan comparison" : "플랜 비교"}
+          {t(locale, "breweryDetail.cta.planLink")}
         </Link>
         <a
           href={mailto}
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          {locale === "en" ? "Apply" : "신청하기"}
+          {t(locale, "breweryDetail.cta.applyLink")}
         </a>
       </div>
     </section>

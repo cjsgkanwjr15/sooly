@@ -1,44 +1,40 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getAllPosts } from "@/lib/blog";
-import { getLocale } from "@/lib/locale";
+import { getLocale, type Locale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
-export const metadata: Metadata = {
-  title: "Journal",
-  description:
-    "한국술을 더 깊게 즐기기 위한 읽을거리. 양조장 방문기, 페어링 가이드, 전통주의 역사.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return {
+    title: t(locale, "blog.metaTitle"),
+    description: t(locale, "blog.metaDescription"),
+  };
+}
 
 export const revalidate = 3600;
 
 export default async function BlogIndexPage() {
   const locale = await getLocale();
-  const isEn = locale === "en";
   const posts = await getAllPosts(locale);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
       <header className="mb-14">
         <p className="text-xs uppercase tracking-[0.3em] text-primary/70">
-          Journal
+          {t(locale, "blog.uppercase")}
         </p>
         <h1 className="mt-3 font-serif text-4xl font-semibold tracking-tight sm:text-5xl">
-          {isEn
-            ? "The pleasure of drinking, the depth of reading"
-            : "마시는 즐거움, 읽는 깊이"}
+          {t(locale, "blog.h1")}
         </h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-          {isEn
-            ? "Brewery visits, pairing guides, the history of Korean alcohol. Reading material to enjoy Korean alcohol more fully."
-            : "양조장 방문기, 페어링 가이드, 전통주의 역사. 한국술을 더 풍성하게 즐기기 위한 읽을거리."}
+          {t(locale, "blog.description")}
         </p>
       </header>
 
       {posts.length === 0 ? (
         <p className="py-16 text-center text-muted-foreground">
-          {isEn
-            ? "No posts yet. The first story is on the way."
-            : "아직 게시글이 없습니다. 곧 첫 이야기가 올라옵니다."}
+          {t(locale, "blog.empty")}
         </p>
       ) : (
         <ul className="divide-y divide-border/60">
@@ -48,14 +44,10 @@ export default async function BlogIndexPage() {
               <li key={p.slug} className="py-8">
                 <Link href={`/blog/${p.slug}`} className="group block">
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <time dateTime={p.date}>
-                      {formatDate(p.date, locale)}
-                    </time>
+                    <time dateTime={p.date}>{formatDate(p.date, locale)}</time>
                     <span>·</span>
                     <span>
-                      {isEn
-                        ? `${p.readingMinutes} min read`
-                        : `${p.readingMinutes}분 읽기`}
+                      {t(locale, "blog.minRead", { n: p.readingMinutes })}
                     </span>
                     {fallback && (
                       <>
@@ -90,7 +82,7 @@ export default async function BlogIndexPage() {
   );
 }
 
-function formatDate(iso: string, locale: "ko" | "en"): string {
+function formatDate(iso: string, locale: Locale): string {
   const [y, m, d] = iso.split("-");
   if (locale === "en") {
     const months = [

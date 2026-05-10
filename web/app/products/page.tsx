@@ -6,11 +6,16 @@ import { ProductFilters } from "@/components/product-filters";
 import { Stars } from "@/components/rating-display";
 import { Pagination } from "@/components/pagination";
 import { sanitizeSearch } from "@/lib/search";
+import { getLocale, pick } from "@/lib/locale";
+import { t, tCategory } from "@/lib/i18n";
 
-export const metadata: Metadata = {
-  title: "제품",
-  description: "한국 전통주·막걸리·소주·과실주 791개 제품 카탈로그.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return {
+    title: t(locale, "productsList.metaTitle"),
+    description: t(locale, "productsList.metaDescription"),
+  };
+}
 
 type SearchParams = {
   q?: string;
@@ -22,10 +27,11 @@ type SearchParams = {
 type ProductRow = {
   id: string;
   name_ko: string;
+  name_en: string | null;
   category: string | null;
   abv: number | null;
   volume_ml: number | null;
-  breweries: { name_ko: string; region: string | null } | null;
+  breweries: { name_ko: string; name_en: string | null; region: string | null } | null;
 };
 
 const CATEGORIES = ["탁주", "약주", "청주", "증류주", "과실주", "리큐르"];
@@ -42,6 +48,7 @@ export default async function ProductsPage({
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
+  const locale = await getLocale();
   const sb = await supabaseServer();
 
   // breweries 전체 unique region — 필터 옵션용
@@ -53,9 +60,10 @@ export default async function ProductsPage({
 
   let query = sb
     .from("products")
-    .select("id, name_ko, category, abv, volume_ml, breweries!inner(name_ko, region)", {
-      count: "exact",
-    })
+    .select(
+      "id, name_ko, name_en, category, abv, volume_ml, breweries!inner(name_ko, name_en, region)",
+      { count: "exact" },
+    )
     .order("category", { ascending: true })
     .order("name_ko", { ascending: true })
     .range(from, to);
@@ -99,44 +107,61 @@ export default async function ProductsPage({
     return qs ? `/products?${qs}` : "/products";
   }
 
+  const isFiltered = Boolean(q || category || region);
+
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
       <header className="mb-6">
         <h1 className="font-serif text-3xl font-semibold tracking-tight">
-          제품 카탈로그
+          {t(locale, "productsList.h1")}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {q || category || region ? (
+          {isFiltered ? (
             <>
-              검색 결과 <strong className="text-foreground">{total}</strong>건
+              {t(locale, "productsList.searchSummaryPre")}
+              <strong className="text-foreground">{total}</strong>
+              {t(locale, "productsList.searchSummarySuffix")}
               {q && <> · "{q}"</>}
-              {category && <> · {category}</>}
+              {category && <> · {tCategory(locale, category)}</>}
               {region && <> · {region}</>}
             </>
           ) : (
-            <>총 <strong className="text-foreground">{total}</strong>개 제품</>
+            <>
+              {t(locale, "productsList.totalSummaryPre")}
+              <strong className="text-foreground">{total}</strong>
+              {t(locale, "productsList.totalSummarySuffix")}
+            </>
           )}
           {totalPages > 1 && (
-            <span> · {page}/{totalPages} 페이지</span>
+            <span>
+              {" · "}
+              {t(locale, "productsList.pageInfo", { page, total: totalPages })}
+            </span>
           )}
         </p>
       </header>
 
-      <ProductFilters categories={CATEGORIES} regions={regions} />
+      <ProductFilters categories={CATEGORIES} regions={regions} locale={locale} />
 
       {error && (
-        <p className="mt-6 text-red-600">DB 조회 실패: {error.message}</p>
+        <p className="mt-6 text-red-600">
+          {t(locale, "productsList.error", { message: error.message })}
+        </p>
       )}
 
       {products.length === 0 && !error && (
         <p className="mt-16 text-center text-muted-foreground">
-          조건에 맞는 제품이 없습니다.
+          {t(locale, "productsList.empty")}
         </p>
       )}
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {products.map((p) => {
           const b = Array.isArray(p.breweries) ? p.breweries[0] : p.breweries;
+          const productName = pick(locale, p.name_ko, p.name_en) ?? p.name_ko;
+          const breweryName = b
+            ? (pick(locale, b.name_ko, b.name_en) ?? b.name_ko)
+            : t(locale, "productsList.noBreweryName");
           return (
             <Link
               key={p.id}
@@ -145,16 +170,16 @@ export default async function ProductsPage({
             >
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-serif text-lg font-medium leading-tight group-hover:underline">
-                  {p.name_ko}
+                  {productName}
                 </h3>
                 {p.category && (
                   <Badge variant="secondary" className="shrink-0">
-                    {p.category}
+                    {tCategory(locale, p.category)}
                   </Badge>
                 )}
               </div>
               <div className="mt-2 text-sm text-muted-foreground">
-                {b?.name_ko ?? "양조장 미상"}
+                {breweryName}
                 {b?.region && (
                   <span className="ml-1 text-xs opacity-70">· {b.region}</span>
                 )}

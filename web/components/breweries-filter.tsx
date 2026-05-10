@@ -2,8 +2,16 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { t } from "@/lib/i18n";
+import type { Locale } from "@/lib/locale";
 
-export function BreweriesFilter({ regions }: { regions: string[] }) {
+export function BreweriesFilter({
+  regions,
+  locale,
+}: {
+  regions: string[];
+  locale: Locale;
+}) {
   const pathname = usePathname();
   const params = useSearchParams();
   const active = params.get("region");
@@ -18,7 +26,9 @@ export function BreweriesFilter({ regions }: { regions: string[] }) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="mr-1 text-xs font-medium text-muted-foreground">지역</span>
+      <span className="mr-1 text-xs font-medium text-muted-foreground">
+        {t(locale, "filters.region")}
+      </span>
       {regions.map((r) => {
         const isActive = active === r;
         return (
@@ -41,7 +51,7 @@ export function BreweriesFilter({ regions }: { regions: string[] }) {
           href={pathname}
           className="ml-1 text-xs text-muted-foreground underline-offset-2 hover:underline"
         >
-          해제
+          {t(locale, "filters.clear")}
         </Link>
       )}
     </div>

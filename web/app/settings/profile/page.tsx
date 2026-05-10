@@ -3,12 +3,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import { ProfileEditForm } from "@/components/profile-edit-form";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
-export const metadata: Metadata = {
-  title: "프로필 설정",
-  description: "표시 이름·사용자명·한 줄 소개를 수정합니다.",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return {
+    title: t(locale, "settings.profile.metaTitle"),
+    description: t(locale, "settings.profile.metaDescription"),
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function ProfileSettingsPage() {
   const sb = await supabaseServer();
@@ -31,6 +36,7 @@ export default async function ProfileSettingsPage() {
     profile?.display_name ?? user.email?.split("@")[0] ?? "";
   const initialUsername = profile?.username ?? "";
   const initialBio = profile?.bio ?? "";
+  const locale = await getLocale();
 
   return (
     <main className="mx-auto flex max-w-xl flex-1 flex-col px-6 py-12">
@@ -39,15 +45,15 @@ export default async function ProfileSettingsPage() {
           href="/settings"
           className="underline-offset-4 hover:text-foreground hover:underline"
         >
-          ← 설정으로
+          {t(locale, "settings.profile.backLink")}
         </Link>
       </nav>
 
       <h1 className="font-serif text-3xl font-semibold tracking-tight">
-        프로필 설정
+        {t(locale, "settings.profile.h1")}
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        다른 사용자에게 보여지는 정보를 수정할 수 있어요.
+        {t(locale, "settings.profile.subtitle")}
       </p>
 
       <div className="mt-10">
@@ -55,6 +61,7 @@ export default async function ProfileSettingsPage() {
           initialDisplayName={initialDisplayName}
           initialUsername={initialUsername}
           initialBio={initialBio}
+          locale={locale}
         />
       </div>
     </main>

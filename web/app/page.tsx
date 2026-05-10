@@ -4,6 +4,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { getLocale } from "@/lib/locale";
 import { getAllPosts } from "@/lib/blog";
+import { t, tCategory, tCategoryHint } from "@/lib/i18n";
 
 export const revalidate = 3600;
 
@@ -15,14 +16,23 @@ type FeaturedBrewery = {
   founded_year: number | null;
 };
 
-const CATEGORIES: Array<{ name: string; hint: string; emoji: string }> = [
-  { name: "탁주", hint: "막걸리의 뿌리", emoji: "🍶" },
-  { name: "약주", hint: "맑고 우아한", emoji: "🪷" },
-  { name: "청주", hint: "한국의 정수", emoji: "🌾" },
-  { name: "증류주", hint: "강렬한 향기", emoji: "🔥" },
-  { name: "과실주", hint: "계절의 단맛", emoji: "🍇" },
-  { name: "리큐르", hint: "조화의 술", emoji: "🍯" },
-];
+// 카테고리 한국어 키 (DB column 그대로). 이름·hint 는 dictionary, emoji 만 코드에.
+const CATEGORY_KEYS = [
+  "탁주",
+  "약주",
+  "청주",
+  "증류주",
+  "과실주",
+  "리큐르",
+] as const;
+const CATEGORY_EMOJI: Record<string, string> = {
+  탁주: "🍶",
+  약주: "🪷",
+  청주: "🌾",
+  증류주: "🔥",
+  과실주: "🍇",
+  리큐르: "🍯",
+};
 
 export default async function Home() {
   const locale = await getLocale();
@@ -38,7 +48,7 @@ export default async function Home() {
     sb.from("breweries").select("*", { count: "exact", head: true }),
     sb
       .from("products")
-      .select("id, name_ko, category, abv, volume_ml, breweries(name_ko, region)")
+      .select("id, name_ko, name_en, category, abv, volume_ml, breweries(name_ko, name_en, region)")
       .not("category", "is", null)
       .limit(6),
     sb.from("products").select("category"),
@@ -100,28 +110,38 @@ export default async function Home() {
             {/* Left — copy + CTAs */}
             <div>
               <p className="font-kr-serif text-xs tracking-[0.3em] text-primary/70 uppercase">
-                Korean alcohol, curated
+                {t(locale, "home.hero.uppercase")}
               </p>
               <h1 className="mt-6 font-serif text-[2.75rem] font-medium leading-[1.1] tracking-tight sm:text-[3.75rem] lg:text-[4.5rem]">
-                한국술을 <em className="not-italic text-primary">발견</em>하고,
-                <br />
-                기록하고, 공유하세요.
+                {t(locale, "home.hero.h1Pre")}
+                <em className="not-italic text-primary">
+                  {t(locale, "home.hero.h1Highlight")}
+                </em>
+                {t(locale, "home.hero.h1Mid")
+                  .split("\n")
+                  .map((line, i, arr) => (
+                    <span key={i}>
+                      {line}
+                      {i < arr.length - 1 && <br />}
+                    </span>
+                  ))}
               </h1>
               <p className="mt-7 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-                전통주·막걸리·소주·과실주 {productCount ?? 0}종과 전국 양조장{" "}
-                {breweryCount ?? 0}곳. 이름만 알던 술의 맛·지역·양조장 이야기를 한
-                자리에서.
+                {t(locale, "home.hero.description", {
+                  productCount: productCount ?? 0,
+                  breweryCount: breweryCount ?? 0,
+                })}
               </p>
 
               <div className="mt-10 flex flex-wrap gap-3">
                 <Link href="/products" className={buttonVariants({ size: "lg" })}>
-                  제품 둘러보기
+                  {t(locale, "home.hero.browseProducts")}
                 </Link>
                 <Link
                   href="/breweries"
                   className={buttonVariants({ size: "lg", variant: "outline" })}
                 >
-                  양조장 찾아보기
+                  {t(locale, "home.hero.findBreweries")}
                 </Link>
               </div>
             </div>
@@ -138,30 +158,40 @@ export default async function Home() {
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60 opacity-75" />
                       <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
                     </span>
-                    오늘의 술
+                    {t(locale, "home.hero.todayPick")}
                   </div>
                   {picks[0].category && (
                     <Badge variant="secondary" className="mt-4 w-fit text-[10px]">
-                      {picks[0].category}
+                      {tCategory(locale, picks[0].category)}
                     </Badge>
                   )}
                   <div className="mt-3 font-serif text-2xl font-medium leading-snug group-hover:underline">
-                    {picks[0].name_ko}
+                    {(() => {
+                      const p = picks[0];
+                      if (locale === "en" && p.name_en && p.name_en.trim())
+                        return p.name_en;
+                      return p.name_ko;
+                    })()}
                   </div>
                   {(() => {
                     const brewery = Array.isArray(picks[0].breweries)
                       ? picks[0].breweries[0]
                       : picks[0].breweries;
-                    return brewery ? (
+                    if (!brewery) return null;
+                    const breweryName =
+                      locale === "en" && brewery.name_en && brewery.name_en.trim()
+                        ? brewery.name_en
+                        : brewery.name_ko;
+                    return (
                       <div className="mt-1.5 text-sm text-muted-foreground">
-                        {brewery.name_ko}
+                        {breweryName}
                         {brewery.region && (
                           <span className="ml-1 text-xs opacity-70">
                             · {brewery.region}
                           </span>
                         )}
                       </div>
-                    ) : null;
+                    );
                   })()}
                   <div className="mt-5 flex items-center gap-3 text-xs text-muted-foreground">
                     {picks[0].abv != null && <span>{picks[0].abv}%</span>}
@@ -170,7 +200,7 @@ export default async function Home() {
                     )}
                   </div>
                   <div className="mt-5 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                    제품 페이지 →
+                    {t(locale, "home.hero.productPageLink")}
                   </div>
                 </Link>
               </aside>
@@ -179,10 +209,26 @@ export default async function Home() {
 
           {/* Stats — 카드형 (가로 4 박스) */}
           <dl className="mt-16 grid grid-cols-2 gap-3 border-t pt-8 sm:grid-cols-4 sm:gap-4">
-            <StatCard label="제품" value={productCount ?? 0} suffix="종" />
-            <StatCard label="양조장" value={breweryCount ?? 0} suffix="곳" />
-            <StatCard label="지역" value={17} suffix="시도" />
-            <StatCard label="카테고리" value={6} suffix="종" />
+            <StatCard
+              label={t(locale, "home.stats.productsLabel")}
+              value={productCount ?? 0}
+              suffix={t(locale, "home.stats.productsSuffix")}
+            />
+            <StatCard
+              label={t(locale, "home.stats.breweriesLabel")}
+              value={breweryCount ?? 0}
+              suffix={t(locale, "home.stats.breweriesSuffix")}
+            />
+            <StatCard
+              label={t(locale, "home.stats.regionsLabel")}
+              value={17}
+              suffix={t(locale, "home.stats.regionsSuffix")}
+            />
+            <StatCard
+              label={t(locale, "home.stats.categoriesLabel")}
+              value={6}
+              suffix={t(locale, "home.stats.categoriesSuffix")}
+            />
           </dl>
         </div>
       </section>
@@ -193,33 +239,36 @@ export default async function Home() {
           <div className="mb-8 flex items-end justify-between">
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                Explore by style
+                {t(locale, "home.categoriesSection.subtitle")}
               </p>
               <h2 className="mt-1 font-serif text-3xl font-semibold tracking-tight">
-                카테고리 둘러보기
+                {t(locale, "home.categoriesSection.h2")}
               </h2>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            {CATEGORIES.map((c) => (
+            {CATEGORY_KEYS.map((key) => (
               <Link
-                key={c.name}
-                href={`/categories/${encodeURIComponent(c.name)}`}
+                key={key}
+                href={`/categories/${encodeURIComponent(key)}`}
                 className="group flex flex-col items-center rounded-xl border border-border/60 bg-card p-5 text-center transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-md"
               >
                 <div
                   aria-hidden
                   className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/5 text-3xl transition-colors group-hover:bg-primary/10 sm:h-16 sm:w-16 sm:text-4xl"
                 >
-                  {c.emoji}
+                  {CATEGORY_EMOJI[key]}
                 </div>
                 <div className="mt-3 font-serif text-base font-medium group-hover:underline">
-                  {c.name}
+                  {tCategory(locale, key)}
                 </div>
-                <div className="mt-0.5 text-xs text-muted-foreground">{c.hint}</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  {tCategoryHint(locale, key)}
+                </div>
                 <div className="mt-2 text-xs font-semibold text-primary">
-                  {catMap.get(c.name) ?? 0}개
+                  {catMap.get(key) ?? 0}
+                  {t(locale, "home.categoriesSection.countSuffix")}
                 </div>
               </Link>
             ))}
@@ -234,23 +283,34 @@ export default async function Home() {
             <div className="mb-8 flex items-end justify-between">
               <div>
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                  Today's Picks
+                  {t(locale, "home.picksSection.subtitle")}
                 </p>
                 <h2 className="mt-1 font-serif text-3xl font-semibold tracking-tight">
-                  오늘의 발견
+                  {t(locale, "home.picksSection.h2")}
                 </h2>
               </div>
               <Link
                 href="/products"
                 className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
               >
-                전체 보기 →
+                {t(locale, "common.viewAll")}
               </Link>
             </div>
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {picks.map((p) => {
-                const brewery = Array.isArray(p.breweries) ? p.breweries[0] : p.breweries;
+                const brewery = Array.isArray(p.breweries)
+                  ? p.breweries[0]
+                  : p.breweries;
+                const productName =
+                  locale === "en" && p.name_en && p.name_en.trim()
+                    ? p.name_en
+                    : p.name_ko;
+                const breweryName = brewery
+                  ? locale === "en" && brewery.name_en && brewery.name_en.trim()
+                    ? brewery.name_en
+                    : brewery.name_ko
+                  : t(locale, "home.hero.noBreweryName");
                 return (
                   <Link
                     key={p.id}
@@ -259,14 +319,14 @@ export default async function Home() {
                   >
                     {p.category && (
                       <Badge variant="secondary" className="w-fit text-[10px]">
-                        {p.category}
+                        {tCategory(locale, p.category)}
                       </Badge>
                     )}
                     <div className="mt-3 font-serif text-xl font-medium leading-snug group-hover:underline">
-                      {p.name_ko}
+                      {productName}
                     </div>
                     <div className="mt-2 text-sm text-muted-foreground">
-                      {brewery?.name_ko ?? "양조장 미상"}
+                      {breweryName}
                       {brewery?.region && (
                         <span className="ml-1 text-xs opacity-70">· {brewery.region}</span>
                       )}
@@ -289,10 +349,10 @@ export default async function Home() {
           <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                Featured Brewery
+                {t(locale, "home.featuredSection.subtitle")}
               </p>
               <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
-                이번 주 양조장
+                {t(locale, "home.featuredSection.h2")}
               </h2>
               <p className="mt-2 font-serif text-2xl text-primary">
                 {featuredBrewery.name_ko}
@@ -300,18 +360,22 @@ export default async function Home() {
               {featuredBrewery.region && (
                 <p className="mt-1 text-sm text-muted-foreground">
                   {featuredBrewery.region}
-                  {featuredBrewery.founded_year && ` · 설립 ${featuredBrewery.founded_year}년`}
+                  {featuredBrewery.founded_year &&
+                    ` · ${t(locale, "home.featuredSection.foundedYearLabel", {
+                      year: featuredBrewery.founded_year,
+                    })}`}
                 </p>
               )}
               <Link
                 href={`/breweries/${featuredBrewery.id}`}
                 className="mt-5 inline-block text-sm font-medium underline underline-offset-4 hover:text-primary"
               >
-                양조장 이야기 보기 →
+                {t(locale, "home.featuredSection.viewStory")}
               </Link>
             </div>
             <blockquote className="border-l-2 border-primary/30 pl-6 italic leading-relaxed text-muted-foreground">
-              {featuredBrewery.story_ko ?? "이 양조장의 이야기는 곧 업데이트됩니다."}
+              {featuredBrewery.story_ko ??
+                t(locale, "home.featuredSection.emptyStory")}
             </blockquote>
           </div>
         </section>
@@ -323,20 +387,20 @@ export default async function Home() {
           <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div className="max-w-2xl">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                Journal
+                {t(locale, "home.journalSection.subtitle")}
               </p>
               <h2 className="mt-1 font-serif text-3xl font-semibold tracking-tight">
-                마시는 즐거움, 읽는 깊이
+                {t(locale, "home.journalSection.h2")}
               </h2>
               <p className="mt-3 leading-relaxed text-muted-foreground">
-                양조장 방문기, 페어링 가이드, 전통주의 역사. 한국술을 더 풍성하게 즐기기 위한 읽을거리.
+                {t(locale, "home.journalSection.description")}
               </p>
             </div>
             <Link
               href="/blog"
               className="text-sm font-medium underline-offset-4 hover:text-primary hover:underline"
             >
-              전체 글 보기 →
+              {t(locale, "common.viewAll")}
             </Link>
           </div>
 
@@ -351,7 +415,10 @@ export default async function Home() {
                   <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
                     <span>{post.date}</span>
                     <span aria-hidden>·</span>
-                    <span>{post.readingMinutes}분</span>
+                    <span>
+                      {post.readingMinutes}
+                      {t(locale, "home.journalSection.readingMinutesSuffix")}
+                    </span>
                     {post.locale !== locale && (
                       <Badge variant="secondary" className="ml-1 text-[10px]">
                         {post.locale.toUpperCase()}
@@ -367,14 +434,14 @@ export default async function Home() {
                     </p>
                   )}
                   <div className="mt-auto pt-5 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                    읽으러 가기 →
+                    {t(locale, "home.journalSection.readMore")}
                   </div>
                 </Link>
               ))}
             </div>
           ) : (
             <div className="rounded-xl border border-dashed border-border/60 bg-card p-10 text-center text-sm text-muted-foreground">
-              곧 첫 글이 올라옵니다.
+              {t(locale, "home.journalSection.empty")}
             </div>
           )}
         </div>

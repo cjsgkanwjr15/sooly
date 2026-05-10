@@ -3,8 +3,10 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 import { Input } from "@/components/ui/input";
+import { t } from "@/lib/i18n";
+import type { Locale } from "@/lib/locale";
 
-export function SearchBar() {
+export function SearchBar({ locale }: { locale: Locale }) {
   const router = useRouter();
   const params = useSearchParams();
   const [, startTransition] = useTransition();
@@ -25,11 +27,11 @@ export function SearchBar() {
     <form onSubmit={onSubmit} className="flex items-center">
       <Input
         type="search"
-        placeholder="제품·양조장 검색"
+        placeholder={t(locale, "search.placeholder")}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         className="h-8 w-40 sm:w-56"
-        aria-label="검색"
+        aria-label={t(locale, "search.aria")}
       />
     </form>
   );

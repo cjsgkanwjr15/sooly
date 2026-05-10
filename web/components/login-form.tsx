@@ -4,11 +4,12 @@ import { useActionState } from "react";
 import {
   sendMagicLink,
   signInWithGoogle,
-  signInWithKakao,
   type LoginState,
 } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { t } from "@/lib/i18n";
+import type { Locale } from "@/lib/locale";
 
 const initialState: LoginState = { status: "idle" };
 
@@ -20,8 +21,10 @@ const initialState: LoginState = { status: "idle" };
  *
  * Google 버튼은 별도 form 으로 분리 — server action 안에서 redirect 가 발생해
  * useActionState 로 결과를 받을 필요가 없음.
+ *
+ * Client component 라 locale 은 부모 (server) 에서 prop drilling.
  */
-export function LoginForm({ next }: { next?: string }) {
+export function LoginForm({ next, locale }: { next?: string; locale: Locale }) {
   const [state, formAction, pending] = useActionState(
     sendMagicLink,
     initialState,
@@ -30,14 +33,15 @@ export function LoginForm({ next }: { next?: string }) {
   if (state.status === "sent") {
     return (
       <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-6">
-        <p className="font-serif text-base font-medium">메일을 확인해주세요</p>
+        <p className="font-serif text-base font-medium">
+          {t(locale, "login.sentTitle")}
+        </p>
         <p className="mt-2 text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{state.email}</span>
-          {" 로 로그인 링크를 보냈어요. 이메일의 버튼을 누르면 로그인됩니다."}
+          {t(locale, "login.sentBodyPost")}
         </p>
         <p className="mt-3 text-xs text-muted-foreground">
-          메일이 안 보이면 스팸함을 확인해주세요. 5분 안에 안 오면 다시
-          시도하세요.
+          {t(locale, "login.sentSpamNote")}
         </p>
       </div>
     );
@@ -57,7 +61,7 @@ export function LoginForm({ next }: { next?: string }) {
             className="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-lg bg-[#FEE500] px-4 text-sm font-medium text-[#191919] transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <KakaoIcon />
-            카카오로 계속하기
+            {t(locale, "login.kakaoCta")}
           </button>
         </form>
       */}
@@ -68,13 +72,13 @@ export function LoginForm({ next }: { next?: string }) {
           className="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-lg border border-input bg-background px-4 text-sm font-medium transition-colors hover:bg-foreground/[0.04] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           <GoogleIcon />
-          Google 로 계속하기
+          {t(locale, "login.googleCta")}
         </button>
       </form>
 
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
         <div className="h-px flex-1 bg-border" />
-        <span>또는 이메일</span>
+        <span>{t(locale, "login.orEmail")}</span>
         <div className="h-px flex-1 bg-border" />
       </div>
 
@@ -85,7 +89,7 @@ export function LoginForm({ next }: { next?: string }) {
             htmlFor="email"
             className="text-xs uppercase tracking-wider text-muted-foreground"
           >
-            이메일
+            {t(locale, "login.emailLabel")}
           </label>
           <Input
             id="email"
@@ -93,7 +97,7 @@ export function LoginForm({ next }: { next?: string }) {
             type="email"
             required
             autoComplete="email"
-            placeholder="you@example.com"
+            placeholder={t(locale, "login.emailPlaceholder")}
             className="mt-1.5 h-10"
           />
         </div>
@@ -101,28 +105,10 @@ export function LoginForm({ next }: { next?: string }) {
           <p className="text-sm text-destructive">{state.message}</p>
         )}
         <Button type="submit" disabled={pending} size="lg" className="w-full">
-          {pending ? "전송 중..." : "로그인 링크 보내기"}
+          {pending ? t(locale, "login.sending") : t(locale, "login.sendMagicLink")}
         </Button>
       </form>
     </div>
-  );
-}
-
-function KakaoIcon() {
-  // 카카오 공식 말풍선 마크 (브랜드 가이드 #191919, 노란 배경 #FEE500 위).
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <path
-        fill="#191919"
-        d="M9 1.5C4.582 1.5 1 4.32 1 7.797c0 2.236 1.485 4.196 3.726 5.317-.165.604-.595 2.184-.681 2.524-.107.42.155.414.326.301.135-.089 2.155-1.46 3.025-2.052.526.078 1.066.118 1.604.118 4.418 0 8-2.82 8-6.208C17 4.32 13.418 1.5 9 1.5z"
-      />
-    </svg>
   );
 }
 
