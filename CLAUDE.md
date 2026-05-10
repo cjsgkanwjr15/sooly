@@ -595,6 +595,39 @@ ID 풀 빌드 → `.in()` 패턴 일관.
 - 자격: 한국 내 양조 면허 보유 + 운영자 본인 + 기본 정보 (이야기·사진 1~2장) 제공 의사
 - 마감: 5~10곳 채워지면 마감. 마감 후 일반 인증은 계속 받지만 1기 혜택은 X.
 
+### 2026-05-08: UI i18n 풀세트 마이그레이션 완료
+5-01 / 5-07 두 번 미뤄졌던 4시간 작업. 5-07 에 인프라 (`lib/i18n/{ko,en,index}.ts`) +
+chrome (header/footer/menu) 만 깔았던 위에, 모든 페이지·컴포넌트·detail 라벨까지 한 번에.
+
+- 32 files, +2,331 / -777 lines. dictionary key ~200개 (ko + en 각각).
+- Namespace 추가: common, categories, categoryHints, taste, regions, search, pagination,
+  filters, home, productsList, breweriesList, category, categoryInfo, productDetail,
+  breweryDetail (+ cta), checkIn (form/block/list), login, profile.public, settings
+  (+ profile), forBreweries (50+ entries), blog, notFound, photoPlaceholder, brewerySlot,
+  tasteRadar, ratingDisplay.
+- `t(locale, "key", { name: "x" })` placeholder 치환 추가. `tCategory` / `tCategoryHint`
+  / `tTaste` / `tRegion` 4 헬퍼 = DB 한국어 key 의 dynamic locale 매핑 (DotPath type
+  추론 한계 우회).
+
+매핑 정책:
+- **카테고리** = romanization + 대중 명사 (탁주→Takju, 약주→Yakju, 청주→Cheongju,
+  증류주→Soju, 과실주→Fruit Wine, 리큐르→Liqueur). DB column 한국어 그대로, 표시만 변환.
+- **6축 맛** = 의미 번역 (단맛→Sweet, 산미→Acidic, 쓴맛→Bitter, 감칠맛→Umami,
+  향→Aromatic, 목넘김→Smooth).
+- **지역 (17 시도)** = 짧은 romanization (서울→Seoul, 경기→Gyeonggi, 충청남도→Chungnam,
+  경상북도→Gyeongbuk, ...). 시군구 (안동시 같은) 는 dictionary 미커버 → 한국어 fallback.
+- **URL slug** = 한국어 유지 (`/categories/탁주`).
+
+남은 한국어 잔재 = **DB 데이터 i18n** (UI 라벨 X). `products.ingredients`,
+`products.pairing_suggestions` 가 한국어 단일 칼럼이라 영문 모드도 한국어 노출. 다음 세션의
+1순위: `*_en` 칼럼 추가 + AI 번역.
+
+### 2026-05-08: TasteRadar / PhotoPlaceholder / BreweryContentSlot / RatingDisplay = async server components
+- 호출부 (page) 가 매번 locale prop 을 prop drilling 하지 않게 자체적으로 `getLocale()`.
+- Client component (CheckInForm, MyCheckInRow, LoginForm, ProfileEditForm, SearchBar,
+  ProductFilters, BreweriesFilter, UserMenu) 는 그대로 prop drilling — useState 와 server
+  보안 경계 때문.
+
 ---
 
 ## 13. 참고 외부 리소스
