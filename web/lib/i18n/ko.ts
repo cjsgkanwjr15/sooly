@@ -101,6 +101,10 @@ export const ko = {
   tasteRadar: {
     emptyHint: "맛 프로필은 체크인 누적 후 표시됩니다",
   },
+  ratingDisplay: {
+    noCheckIns: "아직 체크인 없음",
+    countSuffix: "체크인 {count}회",
+  },
   photoPlaceholder: {
     primary: "사진 준비중이에요",
     secondary: "Photo coming soon",

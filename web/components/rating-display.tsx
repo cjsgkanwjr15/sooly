@@ -1,7 +1,11 @@
 /**
  * 별점 표시 컴포넌트. 평균 별점 + 체크인 수.
  * 체크인이 0이면 empty state (곧 체크인 기능 붙을 자리).
+ *
+ * Server component — 자체적으로 locale fetch.
  */
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
 type Props = {
   average: number | null; // 0~5, null=데이터 없음
@@ -16,7 +20,13 @@ const SIZE_MAP = {
   lg: { star: "text-2xl", num: "text-3xl", label: "text-sm" },
 } as const;
 
-export function RatingDisplay({ average, count, size = "md", className = "" }: Props) {
+export async function RatingDisplay({
+  average,
+  count,
+  size = "md",
+  className = "",
+}: Props) {
+  const locale = await getLocale();
   const s = SIZE_MAP[size];
   const hasRating = average != null && count > 0;
 
@@ -25,7 +35,7 @@ export function RatingDisplay({ average, count, size = "md", className = "" }: P
       <div className={`flex items-baseline gap-2 ${className}`}>
         <Stars value={0} className={s.star} />
         <span className={`text-muted-foreground ${s.label}`}>
-          아직 체크인 없음
+          {t(locale, "ratingDisplay.noCheckIns")}
         </span>
       </div>
     );
@@ -38,7 +48,9 @@ export function RatingDisplay({ average, count, size = "md", className = "" }: P
         {average.toFixed(1)}
       </span>
       <span className={`text-muted-foreground ${s.label}`}>
-        체크인 {count.toLocaleString()}회
+        {t(locale, "ratingDisplay.countSuffix", {
+          count: count.toLocaleString(),
+        })}
       </span>
     </div>
   );

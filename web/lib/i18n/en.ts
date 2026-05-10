@@ -91,6 +91,10 @@ export const en: Dict = {
   tasteRadar: {
     emptyHint: "Taste profile appears once enough check-ins accumulate",
   },
+  ratingDisplay: {
+    noCheckIns: "No check-ins yet",
+    countSuffix: "{count} check-ins",
+  },
   photoPlaceholder: {
     primary: "Photo coming soon",
     secondary: "사진 준비중이에요",
