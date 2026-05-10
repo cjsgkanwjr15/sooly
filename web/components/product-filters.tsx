@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { t, tCategory } from "@/lib/i18n";
+import { t, tCategory, tRegion } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
 
 type Props = {
@@ -68,7 +68,7 @@ export function ProductFilters({ categories, regions, locale }: Props) {
             href={hrefFor("region", r)}
             className={chipClass(activeRegion === r)}
           >
-            {r}
+            {tRegion(locale, r)}
           </Link>
         ))}
       </div>

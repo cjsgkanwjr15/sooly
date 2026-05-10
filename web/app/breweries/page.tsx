@@ -5,7 +5,7 @@ import { BreweriesFilter } from "@/components/breweries-filter";
 import { Pagination } from "@/components/pagination";
 import { sanitizeSearch } from "@/lib/search";
 import { getLocale, pick } from "@/lib/locale";
-import { t } from "@/lib/i18n";
+import { t, tRegion } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -108,7 +108,7 @@ export default async function BreweriesPage({
               <strong className="text-foreground">{total}</strong>
               {t(locale, "breweriesList.searchSummarySuffix")}
               {q && <> · "{q}"</>}
-              {region && <> · {region}</>}
+              {region && <> · {tRegion(locale, region)}</>}
             </>
           ) : (
             <>
@@ -161,7 +161,9 @@ export default async function BreweriesPage({
                 )}
               </div>
               {b.region && (
-                <div className="mt-1 text-sm text-muted-foreground">{b.region}</div>
+                <div className="mt-1 text-sm text-muted-foreground">
+                  {tRegion(locale, b.region)}
+                </div>
               )}
               <div className="mt-auto pt-3 text-xs text-muted-foreground">
                 {productCount}

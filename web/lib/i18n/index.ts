@@ -88,3 +88,15 @@ export function tCategoryHint(locale: Locale, koValue: string): string {
 export function tTaste(locale: Locale, koValue: string): string {
   return t(locale, `taste.${koValue}` as TKey);
 }
+
+/**
+ * 한국 시도 한국어 → locale 별 표기. dictionary 에 없는 region (raw value 가
+ * "경기" 처럼 짧거나 시군구 단위면) 은 한국어 그대로 fallback.
+ */
+export function tRegion(locale: Locale, koValue: string): string {
+  const path = `regions.${koValue}`;
+  const fromLocale = resolve(dicts[locale], path);
+  if (typeof fromLocale === "string") return fromLocale;
+  // 매칭 없으면 raw 한국어 (외국인 사용자가 봐도 한국 시도명 검색 가능 — 안전)
+  return koValue;
+}

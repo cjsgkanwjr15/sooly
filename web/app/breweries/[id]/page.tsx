@@ -7,7 +7,7 @@ import { JsonLd } from "@/components/json-ld";
 import { Stars } from "@/components/rating-display";
 import { env } from "@/lib/env";
 import { getLocale, pick } from "@/lib/locale";
-import { t, tCategory } from "@/lib/i18n";
+import { t, tCategory, tRegion } from "@/lib/i18n";
 import type { Metadata } from "next";
 
 export const revalidate = 600;
@@ -179,7 +179,7 @@ export default async function BreweryDetailPage({
               href={`/products?region=${encodeURIComponent(brewery.region)}`}
               className="hover:text-foreground"
             >
-              {brewery.region}
+              {tRegion(locale, brewery.region)}
             </Link>
           </>
         )}
@@ -203,7 +203,7 @@ export default async function BreweryDetailPage({
           <p className="mt-2 text-lg text-muted-foreground">{breweryNameAlt}</p>
         )}
         <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-          {brewery.region && <span>{brewery.region}</span>}
+          {brewery.region && <span>{tRegion(locale, brewery.region)}</span>}
           {brewery.founded_year && (
             <span>
               {t(locale, "breweryDetail.foundedYearLabel", {

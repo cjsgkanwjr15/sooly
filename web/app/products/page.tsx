@@ -7,7 +7,7 @@ import { Stars } from "@/components/rating-display";
 import { Pagination } from "@/components/pagination";
 import { sanitizeSearch } from "@/lib/search";
 import { getLocale, pick } from "@/lib/locale";
-import { t, tCategory } from "@/lib/i18n";
+import { t, tCategory, tRegion } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -123,7 +123,7 @@ export default async function ProductsPage({
               {t(locale, "productsList.searchSummarySuffix")}
               {q && <> · "{q}"</>}
               {category && <> · {tCategory(locale, category)}</>}
-              {region && <> · {region}</>}
+              {region && <> · {tRegion(locale, region)}</>}
             </>
           ) : (
             <>
@@ -181,7 +181,9 @@ export default async function ProductsPage({
               <div className="mt-2 text-sm text-muted-foreground">
                 {breweryName}
                 {b?.region && (
-                  <span className="ml-1 text-xs opacity-70">· {b.region}</span>
+                  <span className="ml-1 text-xs opacity-70">
+                    · {tRegion(locale, b.region)}
+                  </span>
                 )}
               </div>
               <div className="mt-3">

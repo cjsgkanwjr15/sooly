@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { t } from "@/lib/i18n";
+import { t, tRegion } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
 
 export function BreweriesFilter({
@@ -42,7 +42,7 @@ export function BreweriesFilter({
                 : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground")
             }
           >
-            {r}
+            {tRegion(locale, r)}
           </Link>
         );
       })}

@@ -11,7 +11,7 @@ import { RecentCheckIns } from "@/components/recent-check-ins";
 import { JsonLd } from "@/components/json-ld";
 import { env } from "@/lib/env";
 import { getLocale, pick } from "@/lib/locale";
-import { t, tCategory } from "@/lib/i18n";
+import { t, tCategory, tRegion } from "@/lib/i18n";
 import type { Metadata } from "next";
 
 export const revalidate = 600;
@@ -277,7 +277,9 @@ export default async function ProductDetailPage({
                 {breweryName}
               </Link>
               {brewery.region && (
-                <span className="text-muted-foreground"> · {brewery.region}</span>
+                <span className="text-muted-foreground">
+                  {" "}· {tRegion(locale, brewery.region)}
+                </span>
               )}
             </p>
           )}
@@ -317,7 +319,11 @@ export default async function ProductDetailPage({
             />
             <Stat
               label={t(locale, "productDetail.statRegion")}
-              value={brewery?.region ?? t(locale, "productDetail.statEmpty")}
+              value={
+                brewery?.region
+                  ? tRegion(locale, brewery.region)
+                  : t(locale, "productDetail.statEmpty")
+              }
             />
           </dl>
 
@@ -469,7 +475,10 @@ export default async function ProductDetailPage({
                     {pName}
                   </div>
                   <div className="mt-1 text-sm text-muted-foreground">
-                    {bName} {b?.region && <span className="opacity-70">· {b.region}</span>}
+                    {bName}{" "}
+                    {b?.region && (
+                      <span className="opacity-70">· {tRegion(locale, b.region)}</span>
+                    )}
                   </div>
                   <div className="mt-3 flex gap-3 text-xs text-muted-foreground">
                     {p.abv != null && <span>{p.abv}%</span>}

@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { supabaseServer } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { getLocale, pick, type Locale } from "@/lib/locale";
-import { t, tCategory, type TKey } from "@/lib/i18n";
+import { t, tCategory, tRegion, type TKey } from "@/lib/i18n";
 
 export const revalidate = 1800;
 
@@ -170,7 +170,7 @@ export default async function CategoryPage({
                     </div>
                     {b.region && (
                       <div className="mt-1 text-xs text-muted-foreground">
-                        {b.region}
+                        {tRegion(locale, b.region)}
                       </div>
                     )}
                     <div className="mt-2 text-[10px] uppercase tracking-wider text-primary/70">
@@ -225,7 +225,9 @@ export default async function CategoryPage({
                   <div className="mt-2 text-sm text-muted-foreground">
                     {breweryName}
                     {b?.region && (
-                      <span className="ml-1 text-xs opacity-70">· {b.region}</span>
+                      <span className="ml-1 text-xs opacity-70">
+                        · {tRegion(locale, b.region)}
+                      </span>
                     )}
                   </div>
                   <div className="mt-auto pt-3 flex gap-3 text-xs text-muted-foreground">

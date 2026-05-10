@@ -4,7 +4,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { getLocale } from "@/lib/locale";
 import { getAllPosts } from "@/lib/blog";
-import { t, tCategory, tCategoryHint } from "@/lib/i18n";
+import { t, tCategory, tCategoryHint, tRegion } from "@/lib/i18n";
 
 export const revalidate = 3600;
 
@@ -187,7 +187,7 @@ export default async function Home() {
                         {breweryName}
                         {brewery.region && (
                           <span className="ml-1 text-xs opacity-70">
-                            · {brewery.region}
+                            · {tRegion(locale, brewery.region)}
                           </span>
                         )}
                       </div>
@@ -328,7 +328,7 @@ export default async function Home() {
                     <div className="mt-2 text-sm text-muted-foreground">
                       {breweryName}
                       {brewery?.region && (
-                        <span className="ml-1 text-xs opacity-70">· {brewery.region}</span>
+                        <span className="ml-1 text-xs opacity-70">· {tRegion(locale, brewery.region)}</span>
                       )}
                     </div>
                     <div className="mt-auto pt-5 flex gap-3 text-xs text-muted-foreground">
@@ -359,7 +359,7 @@ export default async function Home() {
               </p>
               {featuredBrewery.region && (
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {featuredBrewery.region}
+                  {tRegion(locale, featuredBrewery.region)}
                   {featuredBrewery.founded_year &&
                     ` · ${t(locale, "home.featuredSection.foundedYearLabel", {
                       year: featuredBrewery.founded_year,
