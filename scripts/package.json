@@ -9,7 +9,12 @@
     "import:products:dry": "tsx import-products.ts --dry-run",
     "translate:sample": "tsx ai-translate.ts --sample 5 --dry-run",
     "translate:dry": "tsx ai-translate.ts --dry-run",
-    "translate": "tsx ai-translate.ts"
+    "translate": "tsx ai-translate.ts",
+    "translate-arrays:sample": "tsx ai-translate-arrays.ts --sample 5 --dry-run",
+    "translate-arrays:dry": "tsx ai-translate-arrays.ts --dry-run",
+    "translate-arrays": "tsx ai-translate-arrays.ts",
+    "translate-blog:dry": "tsx ai-translate-blog.ts --dry-run",
+    "translate-blog": "tsx ai-translate-blog.ts"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -20,6 +25,7 @@
     "@google/genai": "^1.0.0",
     "@supabase/supabase-js": "^2.45.4",
     "dotenv": "^16.4.5",
+    "gray-matter": "^4.0.3",
     "xlsx": "^0.18.5"
   }
 }

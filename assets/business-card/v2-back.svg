@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sooly 명함 v2 — 뒷면 (따뜻한 톤)
+  cream 배경 통일. 좌측 정보 / 우측 연락처. terracotta 라인 강조.
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="96mm" height="56mm"
+     viewBox="0 0 96 56">
+
+  <!-- 풀 cream -->
+  <rect x="0" y="0" width="96" height="56" fill="#FAF6EE"/>
+
+  <!-- 상단 가는 terracotta 라인 -->
+  <line x1="8" y1="11" x2="88" y2="11" stroke="#A05A3C" stroke-width="0.3"/>
+
+  <!-- 좌측: 이름 + 직함 -->
+  <g transform="translate(8, 22)">
+    <text x="0" y="0" font-family="'Noto Serif KR', 'Source Han Serif', Georgia, serif"
+          font-size="7.5" font-weight="500" fill="#2A201A" letter-spacing="-0.2">Kim</text>
+    <text x="0" y="6" font-family="'Pretendard', sans-serif"
+          font-size="2.6" fill="#6B5E54" letter-spacing="0.3">FOUNDER</text>
+  </g>
+
+  <!-- 우측: 연락처 -->
+  <g transform="translate(48, 18)">
+    <text x="0" y="0" font-family="'Inter', sans-serif"
+          font-size="3" fill="#2A201A" letter-spacing="0.02">soolyhello@gmail.com</text>
+    <text x="0" y="6" font-family="'Inter', sans-serif"
+          font-size="3" fill="#2A201A" letter-spacing="0.02">sooly.co.kr</text>
+    <text x="0" y="12" font-family="'Inter', sans-serif"
+          font-size="3" fill="#A05A3C" letter-spacing="0.02">@your_handle</text>
+  </g>
+
+  <!-- 하단 자산 메시지 + 1기 모집 -->
+  <line x1="8" y1="42" x2="88" y2="42" stroke="#E6DFD6" stroke-width="0.3"/>
+
+  <text x="8" y="49" font-family="'Pretendard', sans-serif"
+        font-size="2.5" fill="#6B5E54" letter-spacing="0.05">한국술 800종 · 양조장 431곳 카탈로그</text>
+
+  <text x="88" y="49" font-family="'Pretendard', sans-serif"
+        font-size="2.5" fill="#A05A3C" text-anchor="end" letter-spacing="0.05" font-weight="500">1기 양조장 모집 중</text>
+</svg>

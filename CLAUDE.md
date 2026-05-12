@@ -21,7 +21,7 @@
   - Triconix, Soltice 쇼핑몰 주문 처리 자동화
 - **언어**: 한국어 네이티브, 영어 업무 가능
 - **현재 상황**: 퇴사 후 6개월 창업 준비 기간
-- **기존 자산**: 개인 술 리뷰 Instagram 계정 (팔로워 ~400명, "내가 마신 술만 소개" 컨셉)
+- **기존 자산**: 개인 술 리뷰 Instagram 계정 (3개월차, 팔로워 ~500명, "내가 마신 술만 소개" 컨셉)
 - **장기 목표**: 궁극적으로 직접 술 제조 (양조장 창업). 이 플랫폼은 그 전 단계 자산 구축용.
 
 ---
@@ -501,7 +501,7 @@ CREATE INDEX idx_check_ins_product ON check_ins(product_id);
 - 트래픽 → 사진 vs 사진 → 트래픽 둘 다 답 X. 닭과 달걀.
 - **Third path = Kim 본인 5~10 양조장 직접 방문 → 사진·스토리·블로그·IG 4 자산 한 번에 생성
   → 그걸로 다음 cohort 신뢰도 쌓기**. Untappd / Vivino 도 초창기 창업자 직접 방문 패턴.
-- 본인 IG (술 리뷰 4년 컨셉, 400+ 팔로워) = cold contact 의 결정적 무기. cold mail 보다
+- 본인 IG ("내가 마신 술만 소개" 컨셉, 3개월차 / 500 팔로워) = cold contact 의 진정성 무기. cold mail 보다
   "팬으로서 방문" 진정성이 양조장 입장에서도 편함.
 - 첫 cohort 5곳 추천: 한강주조 / 같이양조장 / 한아양조 (서울 시내) + 과천도가 / 술샘 (경기 근거리).
   단 **본인이 마셔본 / 좋아하는 곳 우선**.
@@ -627,6 +627,89 @@ chrome (header/footer/menu) 만 깔았던 위에, 모든 페이지·컴포넌트
 - Client component (CheckInForm, MyCheckInRow, LoginForm, ProfileEditForm, SearchBar,
   ProductFilters, BreweriesFilter, UserMenu) 는 그대로 prop drilling — useState 와 server
   보안 경계 때문.
+
+### 2026-05-11: DB 데이터 i18n + 블로그 자동 번역 인프라
+5-08 블로커였던 두 가지 (DB array i18n + 블로그 영문 자동 번역) 한 세션에 정리.
+
+**DB array i18n** (5-08 우선순위 1):
+- 마이그레이션 0009 — `products.ingredients_en text[]`, `pairing_suggestions_en text[]`
+- `scripts/ai-translate-arrays.ts` — DB 직접 read (xlsx 우회), Gemini fallback chain,
+  resume, length-preserve 검증 (mismatch reject). 791 product 중 740 needed → 백그라운드
+  ~62분 실행. dirty data (pairings 가 마케팅 description 통째인 row) 도 AI 가 핵심만
+  추출 ("Steak" 한 단어로 압축) — bullet UI 에 더 적합.
+- `web/lib/locale.ts` — `pickArray<T>()` 헬퍼 추가 (string array 용 pick).
+- `products/[id]` 페이지 — `pickArray(locale, ingredients, ingredients_en)` 적용.
+- 톤 정책: "정제수" → "Water" (간결). "누룩" → "Nuruk (...gloss)". 한국 고유 = romanization
+  + 첫 등장 부연, 보편 = 영어. 카테고리·6축·지역 매핑과 일관.
+
+**블로그 자동 번역** (5-08 우선순위 3):
+- `scripts/ai-translate-blog.ts` — `{slug}.ko.md` → `{slug}.en.md` 자동 생성. frontmatter
+  (title 의역 / excerpt hook 톤 / tags slug 화) + body (markdown 구조 보존) 한 번의
+  Gemini 호출로 처리. responseSchema 강제.
+- 톤 정책: 막걸리/청주/약주/소주/전통주/누룩 첫 등장 시 romanization + 짧은 부연,
+  이후 romanization 만. URL 보존, 링크 text 만 번역.
+- welcome.ko.md 의 사실 정정 같이: "체크인 9억 건" → "10억 건+", "Verified 플랜" → 5-08
+  의 3-tier (공식 인증 영구 무료 + 비즈니스 플랜 유료) 어휘로. 자동 번역으로 영문판
+  덮어쓰기 (5-01 의 수동 영문판 → derived artifact 로 전환).
+
+### 2026-05-11: 블로그 = .ko.md canonical / .en.md derived (룰)
+- `.ko.md` 가 canonical source. 수정은 .ko.md 에서.
+- `.en.md` 는 `ai-translate-blog.ts` 가 만드는 derived artifact. 사후 hand-edit 비권장 —
+  다음 `--force` 에서 덮어쓰임. 수정하려면 ko 에서 하고 force 재생성.
+- 예외: 특정 글이 영문 only (외국인 대상) 면 .ko.md 없이 .en.md 만 두는 것도 허용
+  (5-01 fallback 정책 b 가 반대 방향 — ko 만 있을 때 ko 노출 — 도 지원).
+- Workflow: `npm run translate-blog -- --slug X --force` (특정 한 편) /
+  `npm run translate-blog` (모든 미번역 글). dry-run 으로 톤 미리 검증 권장.
+
+### 2026-05-11: 본인 IG 자산 정확화 — `@zanlab_archive` (3개월 / 500 팔로워)
+5-07 에 "4년 컨셉 / 400+ 팔로워" 로 잘못 기록된 거 정정. 본인 IG = 3개월 / 500 / 컨셉만 4년차
+처럼 "내가 마신 술만 소개" 로 일관. 핸들 = `@zanlab_archive` ("잔랩 아카이브" — 술잔 연구실
++ 기록 의미). 명함·outreach·진정성 도구 모두 이 핸들.
+
+명함 멘트에서 "4년" 같은 *기간 강조* 는 X (사실 X). **컨셉만 강조** 가 진정성 살림:
+> "한국술 매니아인데, 마신 술만 인스타에 올리고 있어요."
+
+3개월 / 500 = 양조장 사장님 입장 *active 매니아* 신호로 충분. 진짜 약점은 X.
+
+`zanlab_archive` IG bio 에 "Sooly (한국술 정보 허브) 운영 / 👇 sooly.co.kr" 한 줄 추가하면
+양조장 사장님이 클릭 시 *Kim = Sooly 운영자 + 한국술 진심 매니아* 즉시 인식. 별개 brand 처럼
+보이는 우려 해결.
+
+### 2026-05-11: 명함 = Canva 작업 (`assets/business-card/v1.1-*.svg` 는 참고용)
+시안 v1.1 SVG (Sooly 로고 PNG 임베드 + sooly.co.kr QR + 김재훈/Jaehoon Kim · 운영자/Editor +
+zanlab_archive) 만들었지만 실제 명함은 **Canva 에서 직접 만들기** 결정. SVG = 정보·레이아웃·
+색상 *레퍼런스*.
+
+이유: SVG 의 PNG 로고 raster 임베드 + 시스템 폰트 의존 = 인쇄 품질·일관성 약함. 양면 톤
+contrast (앞 cream / 뒤 dark) 도 한국 양조장 사장님 정서엔 살짝 cold. Canva 의 한국 명함
+템플릿 + Sooly 로고 + v1.1 의 정보 그대로 = 30분 작업으로 *짜치지 않은* 명함.
+
+**명함 사양** (Kim 결정): 86×52mm · 머메이드 고평량 (300~400g) · 양면 컬러 · 200매. 인쇄소
+이지프린팅 / 성원애드피아 / 로켓디자인 추천.
+
+### 2026-05-11: 명함 IG 핸들 = `@zanlab_archive` (5-08 룰 정합 결정)
+5-08 룰: "@sooly_hello 콘텐츠 5~10개 채워질 때까지 outreach 메일·핸들 노출 X"
+(이유: 빈 계정 클릭 = 신뢰 즉사). 명함도 동일 룰 적용해야 함.
+
+→ 명함 = **개인 IG `@zanlab_archive`** (콘텐츠 있음, 진정성 신호 강함). Sooly 공식 IG 는 콘텐츠
+시드 채워진 후 *follow-up 메일·사이트* 에서 자연 노출. 명함 단계엔 X.
+
+**Sooly IG 콘텐츠 시드 액션 아이템**: 막걸리 엑스포 (~5/17) 다녀온 직후 (월~수) IG 첫 5~10
+게시물 일제 업로드. 양조장 사장님이 명함 받고 follow-up 메일·사이트 둘러볼 시점에 콘텐츠
+채워져 있게.
+
+### 2026-05-11: 막걸리 엑스포 (~5/17) outreach 시퀀스 결정
+- **메시지 reframe**: "1기 양조장 모집" 트래픽 권위 의문 → **"양조장님 술이 등재돼 있어요"
+  자산 hook**. ask 큰 거 X, 사실 + 호기심 hook + 사이트 클릭 유도. 1기 ask 는 follow-up 단계.
+- **Elevator pitch (입에 외울 것)**:
+  > "한국술 좋아해서 마신 술만 인스타에 올리고 있어요. 그러다 카탈로그 사이트를 만들기
+  > 시작했어요. sooly.co.kr 입니다. 양조장 1,300곳 제품 800종 모아놨고요. 양조장 페이지
+  > 한 번 봐주실래요? 명함 드릴게요."
+- **본인 IG (zanlab) 명함 옆 = 진정성 직격 무기**. 양조장 사장님이 "당신 누구야" 의문 가지면
+  즉시 본인 IG 띄워서 마신 술 사진 + 그 양조장 술 있으면 강조 ("요거 양조장님 술이네요").
+- **사진 사용 윤리** (큐레이션 블로그 주제 다루다 부각): 양조장 IG 홍보용 사진 무허락 사용 = 법적
+  회색 + Kim 의 cohort outreach 직전이라 *관계·브랜드 리스크* 가 더 큼. 본인 IG 사진 / 본인
+  촬영 / 양조장 짧은 허락 메일 (cohort outreach 의 연착륙 시퀀스로 활용 가능) 권장.
 
 ---
 

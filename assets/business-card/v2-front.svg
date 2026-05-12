@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sooly 명함 v2 — 앞면 (따뜻한 톤, 통일된 cream)
+  로고 중심 + tagline 하단. 양면 모두 cream.
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="96mm" height="56mm"
+     viewBox="0 0 96 56">
+
+  <!-- 풀 cream -->
+  <rect x="0" y="0" width="96" height="56" fill="#FAF6EE"/>
+
+  <!-- 상단 좌측 작은 mark — terracotta 한 줄 -->
+  <line x1="8" y1="12" x2="20" y2="12" stroke="#A05A3C" stroke-width="0.5"/>
+  <text x="22" y="13" font-family="'Pretendard', sans-serif"
+        font-size="2.4" fill="#A05A3C" letter-spacing="0.25">SOOLY</text>
+
+  <!-- 중앙 큰 wordmark (한국어 + 영문 stack) -->
+  <text x="48" y="29" font-family="'Noto Serif KR', 'Source Han Serif', Georgia, serif"
+        font-size="14" font-weight="600" fill="#2A201A" text-anchor="middle" letter-spacing="-0.5">수리</text>
+  <text x="48" y="36" font-family="'Inter', Georgia, serif"
+        font-size="3.2" fill="#6B5E54" text-anchor="middle" letter-spacing="0.4" font-style="italic">Sooly</text>
+
+  <!-- 하단 tagline -->
+  <text x="48" y="46" font-family="'Pretendard', 'Apple SD Gothic Neo', sans-serif"
+        font-size="3" fill="#2A201A" text-anchor="middle" letter-spacing="0.1">한국술 정보 글로벌 허브</text>
+  <text x="48" y="50.5" font-family="'Inter', sans-serif"
+        font-size="2.4" fill="#6B5E54" text-anchor="middle" letter-spacing="0.15">A Global Hub for Korean Alcohol</text>
+</svg>

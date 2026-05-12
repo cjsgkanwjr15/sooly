@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Sooly 명함 v1.1 미리보기</title>
+<style>
+  body {
+    margin: 0;
+    padding: 40px;
+    background: #1f1f1f;
+    color: #f5f5f5;
+    font-family: 'Pretendard', -apple-system, sans-serif;
+  }
+  h1 { font-size: 18px; font-weight: 500; margin: 0 0 8px; letter-spacing: 0.05em; }
+  .sub { color: #aaa; font-size: 13px; margin-bottom: 32px; }
+  h2 { font-size: 14px; font-weight: 500; margin: 32px 0 12px; color: #d0c5b8; letter-spacing: 0.1em; }
+
+  .row { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; }
+  .label { font-size: 13px; color: #888; margin-top: 8px; }
+
+  /* 약 2.5배 확대해서 보기 편하게 */
+  .scaler {
+    width: 240px;
+    height: 140px;
+    margin-bottom: 110px;
+    margin-right: 16px;
+  }
+  .scaler object {
+    transform: scale(2.5);
+    transform-origin: top left;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+    border-radius: 4px;
+  }
+
+  hr { border: 0; border-top: 1px solid #444; margin: 48px 0; }
+
+  .real-row { display: flex; gap: 20px; margin-top: 16px; flex-wrap: wrap; }
+  .real-row object {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    border-radius: 2px;
+  }
+
+  .footnote { font-size: 12px; color: #888; line-height: 1.7; margin-top: 32px; max-width: 900px; }
+</style>
+</head>
+<body>
+
+<h1>Sooly 명함 v1.1</h1>
+<div class="sub">Sooly 로고 · 김재훈 · Jaehoon Kim · 운영자/Editor · QR (sooly.co.kr) · @sooly_hello</div>
+
+<h2>2.5× 확대</h2>
+<div class="row">
+  <div>
+    <div class="scaler">
+      <object data="v1.1-front.svg" type="image/svg+xml" width="96mm" height="56mm"></object>
+    </div>
+    <div class="label">앞면</div>
+  </div>
+  <div>
+    <div class="scaler">
+      <object data="v1.1-back.svg" type="image/svg+xml" width="96mm" height="56mm"></object>
+    </div>
+    <div class="label">뒷면 (QR + 연락처)</div>
+  </div>
+</div>
+
+<hr>
+
+<h2>실제 크기 (90 × 50 mm) — 손에 들었을 때</h2>
+<div class="real-row">
+  <object data="v1.1-front.svg" type="image/svg+xml" width="90mm" height="50mm"></object>
+  <object data="v1.1-back.svg" type="image/svg+xml" width="90mm" height="50mm"></object>
+</div>
+
+<p class="footnote">
+* 화면 픽셀 ≠ 인쇄 mm 정확. 실제 인쇄물은 화면보다 더 선명·정확.<br>
+* 폰트 시스템에 없으면 fallback. 인쇄소가 outline 변환하면 동일하게 나옴.<br>
+* QR 휴대폰 카메라로 직접 찍어서 sooly.co.kr 들어가는지 테스트 가능 (실제 크기에서 가장 정확).
+</p>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sooly 명함 v1 — 뒷면 (연락처 + 자산 hook)
+  마감: 90 x 50 mm | 출혈: 3mm 사방 (작업 영역 96 x 56)
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="96mm" height="56mm"
+     viewBox="0 0 96 56">
+
+  <!-- 출혈 영역 전체 dark 배경 (앞면과 contrast) -->
+  <rect x="0" y="0" width="96" height="56" fill="#2A201A"/>
+
+  <!-- 좌측 — 자산 hook 메시지 (terracotta 강조) -->
+  <g transform="translate(8, 12)">
+    <text x="0" y="0" font-family="'Pretendard', 'Apple SD Gothic Neo', sans-serif"
+          font-size="2.6" fill="#A05A3C" letter-spacing="0.2">CATALOG</text>
+
+    <text x="0" y="8" font-family="'Noto Serif KR', 'Source Han Serif', Georgia, serif"
+          font-size="6" font-weight="500" fill="#FAF6EE" letter-spacing="-0.15">한국술 800종</text>
+
+    <text x="0" y="15" font-family="'Noto Serif KR', 'Source Han Serif', Georgia, serif"
+          font-size="6" font-weight="500" fill="#FAF6EE" letter-spacing="-0.15">양조장 431곳</text>
+
+    <text x="0" y="22" font-family="'Pretendard', 'Apple SD Gothic Neo', sans-serif"
+          font-size="2.6" fill="#A8978A" letter-spacing="0.05">한·영 이중언어 카탈로그</text>
+  </g>
+
+  <!-- 우측 — 연락처 -->
+  <g transform="translate(54, 12)">
+    <text x="0" y="0" font-family="'Pretendard', 'Apple SD Gothic Neo', sans-serif"
+          font-size="2.6" fill="#A05A3C" letter-spacing="0.2">CONTACT</text>
+
+    <text x="0" y="8" font-family="'Inter', sans-serif"
+          font-size="3" fill="#FAF6EE" letter-spacing="0.02">soolyhello@gmail.com</text>
+
+    <text x="0" y="14" font-family="'Inter', sans-serif"
+          font-size="3" fill="#FAF6EE" letter-spacing="0.02">sooly.co.kr</text>
+
+    <text x="0" y="20" font-family="'Inter', sans-serif"
+          font-size="3" fill="#A8978A" letter-spacing="0.02">@your_handle</text>
+  </g>
+
+  <!-- 하단 1기 양조장 메시지 -->
+  <line x1="8" y1="42" x2="88" y2="42" stroke="#A05A3C" stroke-width="0.3"/>
+  <text x="48" y="49" font-family="'Pretendard', 'Apple SD Gothic Neo', sans-serif"
+        font-size="2.8" fill="#FAF6EE" text-anchor="middle" letter-spacing="0.1">1기 양조장 모집 중 · sooly.co.kr/for-breweries</text>
+</svg>

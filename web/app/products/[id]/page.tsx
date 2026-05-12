@@ -10,7 +10,7 @@ import { CheckInBlock } from "@/components/check-in-block";
 import { RecentCheckIns } from "@/components/recent-check-ins";
 import { JsonLd } from "@/components/json-ld";
 import { env } from "@/lib/env";
-import { getLocale, pick } from "@/lib/locale";
+import { getLocale, pick, pickArray } from "@/lib/locale";
 import { t, tCategory, tRegion } from "@/lib/i18n";
 import type { Metadata } from "next";
 
@@ -24,9 +24,11 @@ type ProductDetail = {
   abv: number | null;
   volume_ml: number | null;
   ingredients: string[] | null;
+  ingredients_en: string[] | null;
   tasting_notes_ko: string | null;
   tasting_notes_en: string | null;
   pairing_suggestions: string[] | null;
+  pairing_suggestions_en: string[] | null;
   image_url: string | null;
   source_url: string | null;
   brewery_id: string | null;
@@ -47,8 +49,8 @@ async function getProduct(id: string) {
   const { data, error } = await sb
     .from("products")
     .select(
-      `id, name_ko, name_en, category, abv, volume_ml, ingredients,
-       tasting_notes_ko, tasting_notes_en, pairing_suggestions,
+      `id, name_ko, name_en, category, abv, volume_ml, ingredients, ingredients_en,
+       tasting_notes_ko, tasting_notes_en, pairing_suggestions, pairing_suggestions_en,
        image_url, source_url, brewery_id,
        breweries(id, name_ko, name_en, region, address, website, story_ko, story_en)`,
     )
@@ -168,6 +170,12 @@ export default async function ProductDetailPage({
   const breweryStory = brewery
     ? pick(locale, brewery.story_ko, brewery.story_en)
     : null;
+  const ingredients = pickArray(locale, product.ingredients, product.ingredients_en);
+  const pairings = pickArray(
+    locale,
+    product.pairing_suggestions,
+    product.pairing_suggestions_en,
+  );
 
   // Schema.org Product — Google 검색 결과 rich snippet (카테고리·브랜드·가격) 활성화.
   // 알코올 음료를 위한 별도 type 이 schema.org 에 없어 Product + additionalProperty 로 표현.
@@ -348,10 +356,10 @@ export default async function ProductDetailPage({
             )}
           </Section>
 
-          {product.ingredients && product.ingredients.length > 0 && (
+          {ingredients.length > 0 && (
             <Section title={t(locale, "productDetail.ingredientsH2")}>
               <div className="flex flex-wrap gap-2">
-                {product.ingredients.map((ing) => (
+                {ingredients.map((ing) => (
                   <Badge key={ing} variant="outline" className="font-normal">
                     {ing}
                   </Badge>
@@ -360,10 +368,10 @@ export default async function ProductDetailPage({
             </Section>
           )}
 
-          {product.pairing_suggestions && product.pairing_suggestions.length > 0 && (
+          {pairings.length > 0 && (
             <Section title={t(locale, "productDetail.pairingsH2")}>
               <ul className="space-y-2 text-[1rem] leading-relaxed">
-                {product.pairing_suggestions.map((p, i) => (
+                {pairings.map((p, i) => (
                   <li key={i} className="flex gap-3">
                     <span className="shrink-0 text-primary">·</span>
                     <span>{p}</span>

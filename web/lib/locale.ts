@@ -48,3 +48,21 @@ export function pick(
   if (en && en.trim()) return en;
   return null;
 }
+
+/**
+ * Array 버전. locale='en' 이고 en array 가 비어있지 않으면 en, 그 외엔 ko fallback.
+ * AI 번역 (scripts/ai-translate-arrays.ts) 가 아직 안 채운 row 는 자동 ko.
+ *
+ * 사용 예:
+ *   pickArray(locale, product.ingredients, product.ingredients_en)
+ */
+export function pickArray<T>(
+  locale: Locale,
+  ko: T[] | null | undefined,
+  en: T[] | null | undefined,
+): T[] {
+  if (locale === "en" && en && en.length > 0) return en;
+  if (ko && ko.length > 0) return ko;
+  if (en && en.length > 0) return en;
+  return [];
+}

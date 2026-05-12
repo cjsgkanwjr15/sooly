@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sooly 명함 v1 — 앞면 (정보형)
+  마감: 90 x 50 mm | 출혈: 3mm 사방 (작업 영역 96 x 56)
+  텍스트는 안전 영역 (마감선 -3mm 안쪽) 안에 배치.
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="96mm" height="56mm"
+     viewBox="0 0 96 56">
+
+  <!-- 출혈 영역 전체 cream 배경 -->
+  <rect x="0" y="0" width="96" height="56" fill="#FAF6EE"/>
+
+  <!-- 마감선 (인쇄 후 잘리는 영역) — 시각 가이드, 인쇄에는 안 보임 -->
+  <!-- 이 시안에는 마감선 visual 없이 전면 cream -->
+
+  <!-- 좌측 brand mark — 큰 'S' serif 한 글자 + tagline -->
+  <g transform="translate(8, 8)">
+    <!-- Sooly wordmark in serif. 폰트: 시스템 serif (인쇄소에서 outline 변환 권장) -->
+    <text x="0" y="13" font-family="'Noto Serif KR', 'Source Han Serif', Georgia, serif"
+          font-size="11" font-weight="600" fill="#2A201A" letter-spacing="-0.3">Sooly</text>
+
+    <!-- terracotta 한 줄 -->
+    <line x1="0.5" y1="17" x2="14" y2="17" stroke="#A05A3C" stroke-width="0.4"/>
+
+    <!-- 태그라인 -->
+    <text x="0" y="24" font-family="'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif"
+          font-size="3.2" fill="#6B5E54" letter-spacing="0.05">한국술 정보 글로벌 허브</text>
+
+    <text x="0" y="29" font-family="'Inter', 'Pretendard', sans-serif"
+          font-size="2.6" fill="#6B5E54" letter-spacing="0.1">A Global Hub for Korean Alcohol</text>
+  </g>
+
+  <!-- 우측 — 이름 + 직함 -->
+  <g transform="translate(54, 24)">
+    <text x="0" y="0" font-family="'Noto Serif KR', 'Source Han Serif', Georgia, serif"
+          font-size="6.5" font-weight="500" fill="#2A201A" letter-spacing="-0.1">Kim</text>
+    <text x="0" y="6" font-family="'Pretendard', 'Apple SD Gothic Neo', sans-serif"
+          font-size="2.8" fill="#6B5E54" letter-spacing="0.15">FOUNDER</text>
+  </g>
+
+  <!-- 하단 우측 도메인 -->
+  <text x="88" y="50" font-family="'Inter', sans-serif"
+        font-size="2.8" fill="#A05A3C" font-weight="500" text-anchor="end" letter-spacing="0.05">sooly.co.kr</text>
+</svg>
