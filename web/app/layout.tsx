@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Fraunces, Inter, Gowun_Batang } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -94,6 +95,9 @@ export default async function RootLayout({
         <SiteHeader />
         <div className="flex-1">{children}</div>
         <SiteFooter />
+
+        {/* Vercel Web Analytics — Pro 무료 포함, 자동 prod 게이트. cookieless 트래커. */}
+        <Analytics />
 
         {/* Google Analytics 4 — prod 빌드에서만.
             dev (npm run dev) 에선 NODE_ENV === "development" 라 로컬 트래픽이
