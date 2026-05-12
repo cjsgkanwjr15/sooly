@@ -14,7 +14,7 @@ import { getLocale, pick, pickArray } from "@/lib/locale";
 import { t, tCategory, tRegion } from "@/lib/i18n";
 import type { Metadata } from "next";
 
-export const revalidate = 600;
+export const revalidate = 86400; // 24h — 5-12 limit hit 후 10m→24h. 체크인 시 revalidatePath
 
 type ProductDetail = {
   id: string;

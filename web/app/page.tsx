@@ -6,7 +6,7 @@ import { getLocale } from "@/lib/locale";
 import { getAllPosts } from "@/lib/blog";
 import { t, tCategory, tCategoryHint, tRegion } from "@/lib/i18n";
 
-export const revalidate = 3600;
+export const revalidate = 21600; // 6h — 5-12 limit hit 후 1h→6h. featured brewery rotation 유지
 
 type FeaturedBrewery = {
   id: string;
@@ -61,8 +61,8 @@ export default async function Home() {
     catMap.set(p.category, (catMap.get(p.category) ?? 0) + 1);
   }
 
-  // Featured brewery — 1순위 찾아가는 양조장, 없으면 임의 양조장 (revalidate=3600 라
-  // 시간당 한 번 변경). is_visiting_brewery flag 가 아직 채워지지 않았어도 빈 영역
+  // Featured brewery — 1순위 찾아가는 양조장, 없으면 임의 양조장 (revalidate=21600
+  // 6시간당 rotation). is_visiting_brewery flag 가 아직 채워지지 않았어도 빈 영역
   // 없이 항상 한 곳을 노출.
   let featuredBrewery: FeaturedBrewery | null = null;
   const { data: visiting } = await sb

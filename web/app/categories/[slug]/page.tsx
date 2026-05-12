@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { getLocale, pick, type Locale } from "@/lib/locale";
 import { t, tCategory, tRegion, type TKey } from "@/lib/i18n";
 
-export const revalidate = 1800;
+export const revalidate = 86400; // 24h — 5-12 limit hit 후 30m→24h
 
 type Params = { slug: string };
 
