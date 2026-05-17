@@ -67,8 +67,6 @@ export default async function BlogPostPage({
       <header className="mb-10">
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <time dateTime={post.date}>{formatDate(post.date, locale)}</time>
-          <span>·</span>
-          <span>{t(locale, "blog.minRead", { n: post.readingMinutes })}</span>
           {post.author && (
             <>
               <span>·</span>

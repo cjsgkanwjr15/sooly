@@ -45,10 +45,6 @@ export default async function BlogIndexPage() {
                 <Link href={`/blog/${p.slug}`} className="group block">
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <time dateTime={p.date}>{formatDate(p.date, locale)}</time>
-                    <span>·</span>
-                    <span>
-                      {t(locale, "blog.minRead", { n: p.readingMinutes })}
-                    </span>
                     {fallback && (
                       <>
                         <span>·</span>
