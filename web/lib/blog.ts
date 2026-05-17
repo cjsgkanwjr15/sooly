@@ -79,7 +79,12 @@ async function readAllPostsBySlug(): Promise<Map<string, Map<Locale, RawPost>>> 
         .use(remarkHtml, { sanitize: false })
         .process(content);
 
-      const stats = readingTime(content);
+      // ko: 한국어 char-based 계산 (분당 ~700자 = 일반 web reading 속도)
+      // en: reading-time 라이브러리 default (영어 200 wpm)
+      const minutes =
+        parsed.locale === "ko"
+          ? Math.max(1, Math.round(content.length / 700))
+          : Math.max(1, Math.round(readingTime(content).minutes));
 
       const post: RawPost = {
         slug: parsed.slug,
@@ -91,7 +96,7 @@ async function readAllPostsBySlug(): Promise<Map<string, Map<Locale, RawPost>>> 
         tags: Array.isArray(data.tags) ? data.tags : [],
         author: data.author ?? "Sooly",
         draft: Boolean(data.draft),
-        readingMinutes: Math.max(1, Math.round(stats.minutes)),
+        readingMinutes: minutes,
         html: String(processed),
       };
 
